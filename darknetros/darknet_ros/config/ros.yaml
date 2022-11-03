@@ -1,7 +1,9 @@
 subscribers:
 
   camera_reading:
-    topic: /camera/rgb/image_raw
+    #topic: /camera/rgb/image_raw
+    #topic: /cv_camera/image_raw
+    topic: /camera_stream
     queue_size: 1
 
 actions:
