@@ -1,0 +1,19 @@
+L2
+Index 76-77: goal B complete overshoot of gaze?
+Timestamp 6376.262497: complete overshoot of gaze for goal B
+Timestamp 6376.623722: clear evidence of how human behavior is predictive in nature. Looking at wrongly placed target while placing a different block
+index 80-81: eventually outlier, eyeballed goal D start
+index 100-101: goal A outlier
+index 104-105: target b eventual outlier because goal A was outlier
+timestamp 6407.995682: another example of gaze midway stop
+
+L3
+timestamp 7550.117337: either eye tracker cannot resolve it or the eye just doesn't move for target and goal A
+index 192-193: eventual outlier due to eyeballing goal C ending
+
+R1
+Index 172-173: eventual outlier due to uncertainty of start and end
+
+R2
+Index 10-11: potential outlier because target D was accidentally moved closer in previous motion
+

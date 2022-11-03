@@ -1,0 +1,17 @@
+L1
+first half could not differentiate between goal and target A
+
+L2
+timestamp 6190.230065: gaze midway stop from target C to goal C. (not included in csv)
+
+R2
+Index 20-21: eventual outlier for goal B. gaze stops midway
+Index 34-35: eventual outlier for Target B. Checked goal D before. Longer distance to travel
+Index 78-79: eventual outlier for target C. Focused on target C then partially went to look down but back up again. Only second focus measured
+Index 106-107: eventual outlier for target B. target A took longer to put in
+Timestamp 5497.552900: gaze just doesn't move for multiple targets and goals
+Timestamp 5505.978560: again gaze doesn't move for target and goal B. Stays at gaze for goal A.
+
+R3
+timestamp 6526.272544: example of gaze stopping midway
+
