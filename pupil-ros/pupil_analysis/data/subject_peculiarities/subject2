@@ -1,0 +1,10 @@
+L1
+timestamp 2744.208503: gaze stays on goal of A while grabbing for target B. Only starts moving once looking at goal B
+Index 48-49: goal C slight outlier
+timestamp 3133.566690: gaze stays on goal A while grabbing for target B. Only starts moving once looking at goal B
+
+R1
+timetsamp 1440.487284: example of gaze stopping midway through travel. So strong that it must be outlier
+
+R2
+index 140-141: goal c outlier

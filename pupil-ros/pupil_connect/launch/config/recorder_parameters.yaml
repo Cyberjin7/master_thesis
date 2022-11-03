@@ -1,0 +1,10 @@
+wait_period: 2 # s
+record_period: 1 # s
+ros_frequency: 60
+targets: [[0.1, 0.1],
+          [0.9, 0.1],
+          [0.9, 0.9],
+          [0.1, 0.9],
+          [0.5, 0.5]]
+meta_data:
+  d2s: 300 # mm. Distance from eyes to screen

@@ -1,0 +1,60 @@
+Research Internship Report Outline
+
+Introduction
+	Why use eye-tracking information for existing neurological tests?
+	While many neurological tests are effective indicators for certain tasks, the information they provide is in general very broad and simple. (Duration it took to perform a trial like with box and block, MMDT)
+	Information about gaze has been proven to be a good biomarker for various neurological factors such as cognitive load etc.
+	Hypothesis: As eyetracking hardware in general does not add to cognitive load, it is a simple way to enhance existing, established neurological tests to gain more cognitive information
+	Aim: To test above hypothesis we use the pupil-core as eye-tracker of choice and test it on the Minnesota Manual Dexterity Test. 
+
+Related Works
+	Eventually talk about how different modalities are added to existing neurological tests (such as vibrotactile feedback) (if I find papers on this in a reasonable amount of time)
+	Most works usually use eye tracking to make replacement neurological tests. Aka it's the same test but can be done with eye-gaze instead of with the hand. Useful for cognitive evaluation in ALS patients
+	As far as I know: only 1 paper that uses gaze data additionally for an existing test
+	
+Background
+	How eye-tracking works. (At least for pupil-core)
+	Eye-tracking biomarkers
+	Minnesota Manual Dexterity Test
+	
+Method
+	Pupil Core (explain its different components)
+	ROS Framework for Data Collection (Pupil Network API -> ROS, ROS GUI for Data Marking)
+		Why ROS? Future proofing: integration with other modalities
+	MMDT Experiment (and why I chose to track the features I did)
+		Is it possible for gaze data to be a measure of dexterity?
+		Hypothesis: The human brain is predictive in nature. The more we can predict our own movement, the more dexterous we are. 
+		
+Results
+	Change from left vs right to visually impaired to not visually impaired
+	Box plot for D vs ND for visually impaired and not visually impaired (total of 4 then)
+	
+Discussion
+	Hypothesis for MMDT not verified
+	Why could this be the case? 
+		Hypothesis simplified hand-eye mechanics too much. (flawed hypothesis) We divided each trial into sub-trials consisting of fixating on a block and its corresponding hole. However the distance from one to the next affects fixation duration. If anything fixation duration might be an indicator for how fast ones hand is rather than a measure of dexterity. The distance to travel from the previous goal to the current target is always shorter than the distance from current target to current goal. Hence the general observation that goal fixations are longer than target fixations.
+		As a rule of thumb: picking something up is easier than putting said object into a hole as they are a relatively tight fit. 
+		what often happened: fixation is already on next target but the hand itself is still putting the block into the hole. Usually by feeling around with the block until it drops into place. This of course lengthens fixation duration but again does not have anything to do directly with dexterity. 
+		The physical performance of the previous goal/target, affects the duration of the next goal/target
+		While these may be indicators of dexterity, it is clear that the relationship we wished to see is more a by-product of various factors rather than a direct behavior. 
+		Fixation durations reflect all these subtle changes making the fixations dependent on what physically happened in each sub-trial. Therefore difficult to come up with a general trend. Or would need even more data. 
+		
+		Another confounder: for dominant hand you don't need to rely on gaze as much. As seen in data where 
+		
+		What might make more sense to record: Fixation point usually changes a few frames before the hand arrives at the given fixation. Duration between the hand reaching a given target/goal and when the gaze moves on to the next target could be a better indicator for dexterity?
+		
+		Summarized: Complex human behavior induced by MMDT as confounders.  
+		Another problem: cannot wear glasses with pupil-core. All left handed subjects wore glasses. This definitely could have affected results. 
+		talk about potential reasons why outliers are more there in dominant side
+		less outliers for impaired subjects because they need to rely on gaze more? Dominant healthy subjects, don't need to rely on gaze too much
+	
+	Difficulties with pupil-core
+		Calibration #1 difficulty: depends on make up, eye-lashes etc. Pupil-Core does not work with everyone
+		Calibration is done in a select zone. Calibrations within a zone can differ
+		Looking in extreme angles is general not possible with the pupil-core
+		Electronics of pupil-core becomes very hot, very fast as well
+	
+	Best practices for using pupil-core.
+	Recommendations on where pupil-core can be used and where it probably shouldn't be used. 
+	
+Conclusion
