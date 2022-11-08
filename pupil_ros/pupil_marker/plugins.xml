@@ -1,0 +1,16 @@
+<library path="src">
+    <class name="PupilMarkerPlugin"
+           type="rqt_bag_pupil_marker.marker_plugin.PupilMarkerPlugin"
+           base_class_type="rqt_bag::Plugin">
+        <description>
+            A plugin for rqt_bag for adding markers to
+        </description>
+    </class>
+    <class name="PupilGazePlugin"
+           type="rqt_bag_pupil_marker.gaze_plugin.PupilGazePlugin"
+           base_class_type="rqt_bag::Plugin">
+        <description>
+            A plugin for rqt_bag to add visualize gaze data on image data
+        </description>
+    </class>
+</library>
