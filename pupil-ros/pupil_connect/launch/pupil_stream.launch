@@ -1,5 +1,0 @@
-<launch>
-    <node name="pupil_stream" pkg="pupil_connect" type="pupil_stream.py" output="screen">
-        <rosparam file="$(find pupil_connect)/launch/config/pupil_topics.yaml" command="load" />
-    </node>
-</launch>

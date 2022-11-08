@@ -1,5 +1,0 @@
-<launch>
-    <node name="gaze_tracker" pkg="pupil_connect" type="gaze_tracker.py" output="screen">
-        <rosparam file="$(find pupil_connect)/launch/config/recorder_parameters.yaml" command="load"/>
-    </node>
-</launch>
