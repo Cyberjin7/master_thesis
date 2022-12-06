@@ -138,6 +138,7 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/pupil_connect_node.cpp)
 add_executable(${PROJECT_NAME}_talker src/talker.cpp)
+add_executable(${PROJECT_NAME}_obj_ident src/object_watcher.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -152,6 +153,9 @@ add_executable(${PROJECT_NAME}_talker src/talker.cpp)
 
 ## Specify libraries to link a library or executable target against
  target_link_libraries(${PROJECT_NAME}_talker
+   ${catkin_LIBRARIES}
+ )
+ target_link_libraries(${PROJECT_NAME}_obj_ident
    ${catkin_LIBRARIES}
  )
 
