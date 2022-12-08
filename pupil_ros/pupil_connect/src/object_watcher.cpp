@@ -2,13 +2,14 @@
 #include "pupil_msgs/fixation.h"
 #include "darknet_ros_msgs/BoundingBoxes.h"
 #include "darknet_ros_msgs/BoundingBox.h"
+#include <inttypes.h>
 
 #include <sstream>
 
 class ObjectEyer{
     private:
         std::vector<double> gaze_pos;
-        std::array<double, 2> test;
+        std::vector<darknet_ros_msgs::BoundingBox> boxes;
         int64_t xmin;
         int64_t xmax;
         int64_t ymin;
@@ -21,30 +22,50 @@ class ObjectEyer{
 
 ObjectEyer::ObjectEyer()
 {
-    gaze_pos.push_back(0.0);
-    gaze_pos.push_back(0.0);
-    test.fill(0.0);
-    xmin = 0;
-    xmax = 0;
-    ymin = 0;
-    ymax = 0;
+    this->gaze_pos.push_back(0.0);
+    this->gaze_pos.push_back(0.0);
+    this->xmin = 0;
+    this->xmax = 0;
+    this->ymin = 0;
+    this->ymax = 0;
+
+    this->boxes.clear();
 }
 
 void ObjectEyer::fixationCallback(const pupil_msgs::fixation::ConstPtr& fixation)
 {
-    gaze_pos[0] = fixation->norm_pos[0]*1200;
-    gaze_pos[1] = 720*( 1 - fixation->norm_pos[1]);
-    ROS_INFO("x: %f", gaze_pos[0]);
-    ROS_INFO("y: %f", gaze_pos[1]);
+    // std::vector<double>(fixation->norm_pos.data(), fixation->norm_pos.size()*sizeof(fixation->norm_pos[0]));
+    // this->gaze_pos = {fixation->norm_pos[0]*1200, fixation->norm_pos[0]*1200};
+
+    this->gaze_pos[0] = fixation->norm_pos[0]*1200;
+    this->gaze_pos[1] = 720*( 1 - fixation->norm_pos[1]);
+    // ROS_INFO("x: %f", this->gaze_pos[0]);
+    // ROS_INFO("y: %f", this->gaze_pos[1]);
+
+    for (auto box : this->boxes){
+        if ((box.xmin <= this->gaze_pos[0]) && (this->gaze_pos[0] <= box.xmax) && (box.ymin <= this->gaze_pos[1]) && (this->gaze_pos[1] <= box.ymax)){
+            ROS_INFO("Gaze is on: %s", box.Class.data());
+        }
+    }
 }
 
 void ObjectEyer::objectCallback(const darknet_ros_msgs::BoundingBoxes::ConstPtr& boxes)
 {
-    ROS_INFO("Object identified: ");
+    if (!this->boxes.empty()){
+        this->boxes.clear();
+    }
+
+    // ROS_INFO("Object identified: ");
     for (auto box : boxes->bounding_boxes)
     {
-        ROS_INFO("Object: %s", box.Class.data());
+        // ROS_INFO("Object: %s", box.Class.data());
+        // ROS_INFO("x_min: %" PRId64, box.xmin);
+        // ROS_INFO("x_max: %" PRId64, box.xmax);
+        // ROS_INFO("y_min: %" PRId64, box.ymin);
+        // ROS_INFO("y_max: %" PRId64, box.ymax);
+        this->boxes.push_back(box);
     }
+
 }
 
 int main(int argc, char **argv)
