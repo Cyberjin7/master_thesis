@@ -22,7 +22,7 @@ if __name__ == '__main__':
 
         ros_time = rospy.get_rostime() - start_time
         ros_time.secs += delay
-        sine.value.data = np.sin(ros_time.to_sec())
+        sine.value.data = np.sin(ros_time.to_sec())*2
         sine.header.stamp = ros_time
         pub.publish(sine)
         rate.sleep()
