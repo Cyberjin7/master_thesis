@@ -14,6 +14,8 @@ class SyncPlayer{
         ros::Publisher q_ref_pub;
         ros::Time sync_time;
         ros::Time future_time;
+        ros::Time start_time;
+        ros::Duration time_diff;
         // rosbag::Bag bag;
         int delay;
         bool play;
@@ -23,11 +25,14 @@ class SyncPlayer{
             q_ref_pub = handler.advertise<custom_ros_msgs::CustomData>("q_ref_sync", 100);
             play = false;
             delay = time_delay;
+            start_time = ros::Time::now();
+            time_diff = ros::Duration(0);
         }
 
         void qCallback(const std_msgs::Float64::ConstPtr& msg);
         bool startCallback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
         ros::Time calculateFuture();
+        ros::Time calculateTime();
 
 };
 
@@ -45,6 +50,15 @@ bool SyncPlayer::startCallback(std_srvs::Empty::Request& request, std_srvs::Empt
     ROS_INFO_STREAM("Received trigger");
     this->play = true;
     return true;
+}
+
+ros::Time SyncPlayer::calculateTime()
+{
+    ros::Time time_now = ros::Time::now();
+    this->time_diff = time_now - this->start_time;
+    time_now.sec = this->time_diff.sec;
+    time_now.nsec = this->time_diff.nsec;
+    return time_now;
 }
 
 ros::Time SyncPlayer::calculateFuture()
@@ -106,7 +120,7 @@ int main(int argc, char **argv)
                     std_msgs::Float64::ConstPtr i = m.instantiate<std_msgs::Float64>();
                     if (i != nullptr)
                     {
-                        player.sync_time = ros::Time::now();
+                        player.sync_time = player.calculateTime();
 
                         // ros::Time time = player.sync_time;
                         // time.sec += 1;
@@ -135,7 +149,7 @@ int main(int argc, char **argv)
             // ros::Time time = player.sync_time;
             // time.sec +=1;
             // ref_msg.header.stamp = time;
-            player.sync_time = ros::Time::now();
+            player.sync_time = player.calculateTime();
             // player.calculateFuture();
             // ref_msg.header.stamp = player.future_time;
             ref_msg.header.stamp = player.calculateFuture();

@@ -10,7 +10,7 @@ import numpy as np
 if __name__ == '__main__':
     pub = rospy.Publisher('sine', CustomData, queue_size=100)
     rospy.init_node('sine_publisher', anonymous=True)
-    rate = rospy.Rate(20)
+    rate = rospy.Rate(200)
 
     sine = CustomData()
 
