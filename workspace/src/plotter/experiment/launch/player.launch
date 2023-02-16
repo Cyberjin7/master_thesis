@@ -1,9 +1,9 @@
 <launch>
     <arg name="BAG" default=""/>
-    <arg name="delay" default="0"/>
+    <arg name="DELAY" default="0"/>
     <node pkg="test_publisher" type="test_publisher_sync_player" name="sync_player" output="screen"> 
         <param  name="bag_path" value="$(dirname)/bag/$(arg BAG)" type="str"/> <!--Adapt value for different input structure-->
-        <param  name="delay" value="$(arg delay)" type="int"/>
+        <param  name="delay" value="$(arg DELAY)" type="int"/>
     </node>
     <node pkg="test_publisher" type="test_publisher_player_trigger" name="player_trigger" output="screen"/>
 </launch>

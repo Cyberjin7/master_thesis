@@ -14,9 +14,8 @@ class SyncPlayer{
         ros::Publisher q_ref_pub;
         ros::Time sync_time;
         ros::Time future_time;
-        ros::Time start_time;
+        ros::Time node_start_time;
         ros::Duration time_diff;
-        // rosbag::Bag bag;
         int delay;
         bool play;
 
@@ -25,7 +24,7 @@ class SyncPlayer{
             q_ref_pub = handler.advertise<custom_ros_msgs::CustomData>("q_ref_sync", 100);
             play = false;
             delay = time_delay;
-            start_time = ros::Time::now();
+            node_start_time = ros::Time::now();
             time_diff = ros::Duration(0);
         }
 
@@ -39,7 +38,6 @@ class SyncPlayer{
 void SyncPlayer::qCallback(const std_msgs::Float64::ConstPtr& msg)
 {
     custom_ros_msgs::CustomData sync_msg;
-    //sync_msg.header.stamp = ros::Time::now();
     sync_msg.header.stamp = this->sync_time;
     sync_msg.value.data = msg->data;
     this->q_pub.publish(sync_msg);
@@ -55,7 +53,7 @@ bool SyncPlayer::startCallback(std_srvs::Empty::Request& request, std_srvs::Empt
 ros::Time SyncPlayer::calculateTime()
 {
     ros::Time time_now = ros::Time::now();
-    this->time_diff = time_now - this->start_time;
+    this->time_diff = time_now - this->node_start_time;
     time_now.sec = this->time_diff.sec;
     time_now.nsec = this->time_diff.nsec;
     return time_now;
@@ -99,7 +97,6 @@ int main(int argc, char **argv)
 
     rosbag::Bag bag;
     bag.open(bag_path, rosbag::bagmode::Read);
-    // player.bag.open(bag_path, rosbag::bagmode::Read);
     
     custom_ros_msgs::CustomData ref_msg;
 
@@ -121,18 +118,8 @@ int main(int argc, char **argv)
                     if (i != nullptr)
                     {
                         player.sync_time = player.calculateTime();
-
-                        // ros::Time time = player.sync_time;
-                        // time.sec += 1;
-                        //player.calculateFuture();
-
-                        // custom_ros_msgs::CustomData ref_msg;
-                        // ref_msg.header.stamp = time;
-                        // ref_msg.header.stamp = player.future_time;
                         ref_msg.header.stamp = player.calculateFuture();
                         ref_msg.value.data = i->data;
-                        //ROS_INFO_STREAM("Data " << i->data);
-
                         player.q_ref_pub.publish(ref_msg);
                     }
                     ros::spinOnce();
@@ -145,13 +132,7 @@ int main(int argc, char **argv)
         
         if(!player.play)
         {
-            // player.sync_time = ros::Time::now();
-            // ros::Time time = player.sync_time;
-            // time.sec +=1;
-            // ref_msg.header.stamp = time;
             player.sync_time = player.calculateTime();
-            // player.calculateFuture();
-            // ref_msg.header.stamp = player.future_time;
             ref_msg.header.stamp = player.calculateFuture();
             ref_msg.value.data = 0;
             player.q_ref_pub.publish(ref_msg);

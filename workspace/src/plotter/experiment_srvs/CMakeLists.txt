@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(experiment)
+project(experiment_srvs)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -8,11 +8,9 @@ project(experiment)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  rospy
+  message_generation
   std_msgs
   std_srvs
-  custom_ros_msgs
-  rosbag
 )
 
 ## System dependencies are found with CMake's conventions
@@ -56,11 +54,10 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+add_service_files(
+  FILES
+  MassChange.srv
+)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -70,10 +67,11 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs
-# )
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+  std_srvs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -105,9 +103,9 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
- INCLUDE_DIRS include
-#  LIBRARIES test_publisher
- CATKIN_DEPENDS rospy std_msgs custom_ros_msgs std_srvs
+#  INCLUDE_DIRS include
+#  LIBRARIES experiment_srvs
+ CATKIN_DEPENDS message_runtime std_msgs std_srvs
 #  DEPENDS system_lib
 )
 
@@ -118,13 +116,13 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-  include
+# include
   ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/test_publisher.cpp
+#   src/${PROJECT_NAME}/experiment_srvs.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -135,9 +133,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME}_sync_player src/sync_player.cpp)
-add_executable(${PROJECT_NAME}_player_trigger src/player_starter.cpp)
-add_executable(${PROJECT_NAME}_mass_changer src/mass_changer.cpp)
+# add_executable(${PROJECT_NAME}_node src/experiment_srvs_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -147,20 +143,12 @@ add_executable(${PROJECT_NAME}_mass_changer src/mass_changer.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(${PROJECT_NAME}_sync_player ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(${PROJECT_NAME}_player_trigger ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(${PROJECT_NAME}_mass_changer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(${PROJECT_NAME}_sync_player
-  ${catkin_LIBRARIES}
-)
-target_link_libraries(${PROJECT_NAME}_player_trigger
-  ${catkin_LIBRARIES}
-)
-target_link_libraries(${PROJECT_NAME}_mass_changer
-  ${catkin_LIBRARIES}
-)
+# target_link_libraries(${PROJECT_NAME}_node
+#   ${catkin_LIBRARIES}
+# )
 
 #############
 ## Install ##
@@ -171,12 +159,10 @@ target_link_libraries(${PROJECT_NAME}_mass_changer
 
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
-catkin_install_python(PROGRAMS
-  scripts/sine_pub.py
-  scripts/sine_pub2.py
-  scripts/q_pub.py
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+# catkin_install_python(PROGRAMS
+#   scripts/my_python_script
+#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+# )
 
 ## Mark executables for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_executables.html
@@ -211,7 +197,7 @@ catkin_install_python(PROGRAMS
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_test_publisher.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_experiment_srvs.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
