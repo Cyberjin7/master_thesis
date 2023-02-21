@@ -106,7 +106,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
  INCLUDE_DIRS include
-#  LIBRARIES test_publisher
+#  LIBRARIES experiment
+ LIBRARIES MassChanger
  CATKIN_DEPENDS rospy std_msgs custom_ros_msgs std_srvs
 #  DEPENDS system_lib
 )
@@ -126,6 +127,10 @@ include_directories(
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/test_publisher.cpp
 # )
+add_library(MassChanger
+  src/MassChanger.cpp
+)
+target_link_libraries(MassChanger ${catkin_LIBRARIES})
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries

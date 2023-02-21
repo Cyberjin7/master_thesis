@@ -1,5 +1,6 @@
 #include "ros/ros.h"
 #include "std_srvs/Empty.h"
+#include "experiment_srvs/Trigger.h"
 
 int main(int argc, char **argv)
 {

@@ -2,6 +2,7 @@
 #include "custom_ros_msgs/CustomData.h"
 #include "std_msgs/Float64.h"
 #include "std_srvs/Empty.h"
+#include "experiment_srvs/Trigger.h"
 #include "rosbag/bag.h"
 #include "rosbag/view.h"
 
