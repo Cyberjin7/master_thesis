@@ -101,37 +101,60 @@ int main(int argc, char **argv)
     
     custom_ros_msgs::CustomData ref_msg;
 
+    rosbag::View traj_view(bag);
+    rosbag::View::iterator it = traj_view.begin();
+    rosbag::MessageInstance const m = *it;
+    uint32_t bag_it = 0;
+
     while (ros::ok())
     {
 
         if(player.play)
         {
-            for(rosbag::MessageInstance const m: rosbag::View(bag))
+            // for(rosbag::MessageInstance const m: rosbag::View(bag))
+            // {
+            //     if(ros::isShuttingDown())
+            //     {
+            //         bag.close();
+            //         break;
+            //     }
+            //     else
+            //     {
+            //         std_msgs::Float64::ConstPtr i = m.instantiate<std_msgs::Float64>();
+            //         if (i != nullptr)
+            //         {
+            //             player.sync_time = player.calculateTime();
+            //             ref_msg.header.stamp = player.calculateFuture();
+            //             ref_msg.value.data = i->data;
+            //             player.q_ref_pub.publish(ref_msg);
+            //         }
+            //         ros::spinOnce();
+            //         loop.sleep();
+            //     }
+            // }
+            // bag.close();
+            // player.play = false;
+
+            // if (it < traj_vew.end()) does not seem to work. Below is not optimal nor best practice but is the next best option
+            if (bag_it < traj_view.size())
             {
-                if(ros::isShuttingDown())
+                std_msgs::Float64::ConstPtr i = (*it).instantiate<std_msgs::Float64>();
+                if (i!= nullptr)
                 {
-                    bag.close();
-                    break;
+                    player.sync_time = player.calculateTime();
+                    ref_msg.header.stamp = player.calculateFuture();
+                    ref_msg.value.data = i->data;
+                    player.q_ref_pub.publish(ref_msg);
                 }
-                else
-                {
-                    std_msgs::Float64::ConstPtr i = m.instantiate<std_msgs::Float64>();
-                    if (i != nullptr)
-                    {
-                        player.sync_time = player.calculateTime();
-                        ref_msg.header.stamp = player.calculateFuture();
-                        ref_msg.value.data = i->data;
-                        player.q_ref_pub.publish(ref_msg);
-                    }
-                    ros::spinOnce();
-                    loop.sleep();
-                }
+                ++it;
+                ++bag_it;
             }
-            bag.close();
-            player.play = false;
+            else{
+                bag.close();
+                player.play = false;
+            }
         }
-        
-        if(!player.play)
+        else
         {
             player.sync_time = player.calculateTime();
             ref_msg.header.stamp = player.calculateFuture();

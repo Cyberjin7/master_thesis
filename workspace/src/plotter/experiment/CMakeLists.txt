@@ -107,7 +107,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
  INCLUDE_DIRS include
 #  LIBRARIES experiment
- LIBRARIES MassChanger
+ LIBRARIES MassChanger SyncPlayer
  CATKIN_DEPENDS rospy std_msgs custom_ros_msgs std_srvs
 #  DEPENDS system_lib
 )
@@ -132,6 +132,11 @@ add_library(MassChanger
 )
 target_link_libraries(MassChanger ${catkin_LIBRARIES})
 
+add_library(SyncPlayer
+  src/SyncPlayer.cpp
+)
+target_link_libraries(SyncPlayer ${catkin_LIBRARIES})
+
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
@@ -143,6 +148,7 @@ target_link_libraries(MassChanger ${catkin_LIBRARIES})
 add_executable(${PROJECT_NAME}_sync_player src/sync_player.cpp)
 add_executable(${PROJECT_NAME}_player_trigger src/player_starter.cpp)
 add_executable(${PROJECT_NAME}_mass_changer src/mass_changer.cpp)
+add_executable(${PROJECT_NAME}_sync_test src/Applications/sync_test.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -155,16 +161,23 @@ add_executable(${PROJECT_NAME}_mass_changer src/mass_changer.cpp)
 add_dependencies(${PROJECT_NAME}_sync_player ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(${PROJECT_NAME}_player_trigger ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(${PROJECT_NAME}_mass_changer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME}_sync_test ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_sync_player
   ${catkin_LIBRARIES}
+  SyncPlayer
 )
 target_link_libraries(${PROJECT_NAME}_player_trigger
   ${catkin_LIBRARIES}
 )
 target_link_libraries(${PROJECT_NAME}_mass_changer
   ${catkin_LIBRARIES}
+  MassChanger
+)
+target_link_libraries(${PROJECT_NAME}_sync_test
+  ${catkin_LIBRARIES}
+  SyncPlayer
 )
 
 #############

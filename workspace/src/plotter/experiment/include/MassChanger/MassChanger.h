@@ -4,6 +4,7 @@
 #include "ros/ros.h"
 #include "std_srvs/Empty.h"
 #include "custom_ros_msgs/CustomData.h"
+#include "experiment_srvs/MassChange.h"
 
 class MassChanger
 {
@@ -20,9 +21,12 @@ public:
     bool start;
     ros::NodeHandle handler;
     std::map<std::string, double> mass_list;
-    std::map<std::string, double> time_limits;
+    std::map<std::string, int> time_limits;
     std::vector<std::string> mass_order;
     std::vector<int> mass_time; 
+    ros::ServiceClient mass_client;
+    experiment_srvs::MassChange mass_srv;
+    int mass_iterator;
 };
 
 // MassChanger::MassChanger(ros::NodeHandle handle)
