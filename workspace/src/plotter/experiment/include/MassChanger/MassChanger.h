@@ -5,6 +5,7 @@
 #include "std_srvs/Empty.h"
 #include "custom_ros_msgs/CustomData.h"
 #include "experiment_srvs/MassChange.h"
+#include "experiment_srvs/Trigger.h"
 
 class MassChanger
 {
@@ -13,7 +14,7 @@ private:
 public:
     MassChanger(ros::NodeHandle handle);
     ~MassChanger();
-    bool startCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+    bool startCallback(experiment_srvs::Trigger::Request &req, experiment_srvs::Trigger::Response &res);
     void syncCallback(const custom_ros_msgs::CustomData::ConstPtr &msg);
     void changeMass(double mass);
     ros::Time start_time;
@@ -27,26 +28,7 @@ public:
     ros::ServiceClient mass_client;
     experiment_srvs::MassChange mass_srv;
     int mass_iterator;
+    void updateTime(ros::Time time);
 };
-
-// MassChanger::MassChanger(ros::NodeHandle handle)
-// {
-// }
-
-// MassChanger::~MassChanger()
-// {
-// }
-
-// bool MassChanger::startCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res)
-// {
-// }
-
-// void MassChanger::syncCallback(const custom_ros_msgs::CustomData::ConstPtr& msg)
-// {
-// }
-
-// void MassChanger::changeMass(double mass)
-// {
-// }
 
 #endif

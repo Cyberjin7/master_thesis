@@ -4,6 +4,7 @@ SyncPlayer::SyncPlayer(ros::NodeHandle handler, int time_delay)
 {
     this->q_pub = handler.advertise<custom_ros_msgs::CustomData>("q_sync", 100);
     this->q_ref_pub = handler.advertise<custom_ros_msgs::CustomData>("q_ref_sync", 100);
+    this->start_client = handler.serviceClient<experiment_srvs::Trigger>("start_trigger");
     this->play = false;
     this->delay = time_delay;
     this->node_start_time = ros::Time::now();
@@ -19,6 +20,7 @@ SyncPlayer::~SyncPlayer()
 
 void SyncPlayer::qCallback(const std_msgs::Float64::ConstPtr& msg)
 {
+    this->synchronize();
     custom_ros_msgs::CustomData sync_msg;
     sync_msg.header.stamp = this->sync_time;
     sync_msg.value.data = msg->data;
@@ -28,8 +30,21 @@ void SyncPlayer::qCallback(const std_msgs::Float64::ConstPtr& msg)
 bool SyncPlayer::startCallback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
 {
     ROS_INFO_STREAM("Received trigger");
-    this->play = true;
+    this->playToggle(true);
+
+    experiment_srvs::Trigger start_trigger;
+    start_trigger.request.trigger.data = true;
+    start_trigger.request.header.stamp = this->sync_time;
+
+    this->start_client.call(start_trigger);
+
     return true;
+}
+
+void SyncPlayer::playToggle(bool play)
+{
+    this->play = play;
+    ROS_INFO_STREAM("Toggle is: " << play);
 }
 
 void SyncPlayer::loadBag(std::string bag_path)
@@ -84,8 +99,10 @@ void SyncPlayer::synchronize()
         else
         {
             this->bag.close();
-            this->play = false;
+            //this->play = false;
+            playToggle(false);
             ROS_WARN_STREAM("Finished playing trajectory!");
+            this->sync_msg.value.data = 0;
         }
     }
     else

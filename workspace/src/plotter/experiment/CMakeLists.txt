@@ -178,6 +178,7 @@ target_link_libraries(${PROJECT_NAME}_mass_changer
 target_link_libraries(${PROJECT_NAME}_sync_test
   ${catkin_LIBRARIES}
   SyncPlayer
+  MassChanger
 )
 
 #############

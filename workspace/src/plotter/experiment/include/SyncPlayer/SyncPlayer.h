@@ -5,13 +5,15 @@
 #include "std_msgs/Float64.h"
 #include "std_srvs/Empty.h"
 #include "custom_ros_msgs/CustomData.h"
+#include "experiment_srvs/Trigger.h"
 #include "rosbag/bag.h"
 #include "rosbag/view.h"
 
 class SyncPlayer
 {
 private:
-    /* data */
+    // rosbag::Bag bag;
+    // rosbag::View traj_view;
 public:
     ros::Publisher q_pub;
     ros::Publisher q_ref_pub;
@@ -28,6 +30,8 @@ public:
     custom_ros_msgs::CustomData sync_msg;
     std_msgs::Float64::ConstPtr q;
     ros::Subscriber q_sub;
+    ros::ServiceClient start_client;
+    // ros::ServiceServer start_service;
 
     SyncPlayer(ros::NodeHandle handler, int time_delay);
     ~SyncPlayer();
@@ -37,6 +41,7 @@ public:
     ros::Time calculateTime();
     void loadBag(std::string bag_path);
     void synchronize();
+    void playToggle(bool play);
 
 };
 

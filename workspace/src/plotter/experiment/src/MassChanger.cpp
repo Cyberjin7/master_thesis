@@ -44,7 +44,7 @@ MassChanger::~MassChanger()
 {
 }
 
-bool MassChanger::startCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res)
+bool MassChanger::startCallback(experiment_srvs::Trigger::Request &req, experiment_srvs::Trigger::Response &res)
 {
     this->start_time = this->current_time;
     start = true;
@@ -61,4 +61,9 @@ void MassChanger::changeMass(double mass)
 {
     this->mass_srv.request.mass.data = mass;
     this->mass_client.call(this->mass_srv);
+}
+
+void MassChanger::updateTime(ros::Time time)
+{
+    this->current_time = time;
 }

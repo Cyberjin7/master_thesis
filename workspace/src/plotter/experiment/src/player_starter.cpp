@@ -6,7 +6,7 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "player_start_client");
     ros::NodeHandle n;
-    ros::ServiceClient start_client = n.serviceClient<std_srvs::Empty>("start_trigger");
+    ros::ServiceClient start_client = n.serviceClient<std_srvs::Empty>("user_trigger");
 
     std::string usr_input;
     std_srvs::Empty trigger;

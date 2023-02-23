@@ -11,7 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
-  genmsg
+  # genmsg
 )
 
 ## System dependencies are found with CMake's conventions
@@ -69,10 +69,10 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-generate_messages(
-  DEPENDENCIES
-  std_msgs
-)
+# generate_messages(
+#   DEPENDENCIES
+#   std_msgs
+# )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -213,4 +213,4 @@ catkin_install_python(PROGRAMS
 
 add_executable(listener_skin src/listener_skin.cpp)
 target_link_libraries(listener_skin ${catkin_LIBRARIES})
-add_dependencies(listener_skin motor_control_generate_messages_cpp)
+# add_dependencies(listener_skin motor_control_generate_messages_cpp)
