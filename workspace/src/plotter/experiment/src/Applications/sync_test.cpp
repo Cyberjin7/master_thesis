@@ -43,18 +43,18 @@ int main(int argc, char **argv)
     SyncPlayer player(n, delay);
     player.loadBag(bag_path);
 
-    MassChanger mass(n);
+    //MassChanger mass(n);
 
     //ros::Subscriber q_sub = n.subscribe("q", 100, &SyncPlayer::qCallback, &player);
     // ros::ServiceServer start_srv = n.advertiseService<std_srvs::Empty::Request, std_srvs::Empty::Response>("user_trigger", boost::bind(startCallback, _1, _2, &player));
     // Source: https://answers.ros.org/question/63991/how-to-make-callback-function-called-by-several-subscriber/?answer=63998#post-id-63998 
-    ros::ServiceServer start_srv = n.advertiseService("user_trigger", &SyncPlayer::startCallback, &player);
+    ros::ServiceServer start_srv = n.advertiseService("user_trigger", &SyncPlayer::toggleCallback, &player);
     ros::Rate loop(20);
 
     while (ros::ok())
     {
         // player.synchronize();
-        mass.updateTime(player.sync_time);
+        //mass.updateTime(player.sync_time);
         
         ros::spinOnce();
         loop.sleep();

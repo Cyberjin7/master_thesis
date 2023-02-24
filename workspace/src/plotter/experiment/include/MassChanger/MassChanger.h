@@ -14,20 +14,26 @@ private:
 public:
     MassChanger(ros::NodeHandle handle);
     ~MassChanger();
-    bool startCallback(experiment_srvs::Trigger::Request &req, experiment_srvs::Trigger::Response &res);
+    bool toggleCallback(experiment_srvs::Trigger::Request &req, experiment_srvs::Trigger::Response &res);
     void syncCallback(const custom_ros_msgs::CustomData::ConstPtr &msg);
-    void changeMass(double mass);
+    void changeMass();
     ros::Time start_time;
     ros::Time current_time;
     bool start;
     ros::NodeHandle handler;
+
     std::map<std::string, double> mass_list;
     std::map<std::string, int> time_limits;
     std::vector<std::string> mass_order;
+
     std::vector<int> mass_time; 
-    ros::ServiceClient mass_client;
-    experiment_srvs::MassChange mass_srv;
     int mass_iterator;
+
+    ros::Subscriber sync_sub;
+    ros::ServiceClient mass_client;
+    ros::ServiceServer toggle_server;
+    experiment_srvs::MassChange mass_srv;
+
     void updateTime(ros::Time time);
 };
 

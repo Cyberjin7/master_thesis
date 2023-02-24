@@ -30,12 +30,12 @@ int main(int argc, char **argv)
     // ros::param::get("~time/min_length", time_min);
     // ros::param::get("~time/max_length", time_max);
 
-    ros::ServiceClient client = n.serviceClient<experiment_srvs::MassChange>("change_mass");
+    // ros::ServiceClient client = n.serviceClient<experiment_srvs::MassChange>("change_mass");
     //ros::ServiceServer service = n.advertiseService("start_trigger", &MassChanger::startCallback, &mass_changer);
-    ros::Subscriber subscriber = n.subscribe("q_sync", 100, &MassChanger::syncCallback, &mass_changer);
+    // ros::Subscriber subscriber = n.subscribe("q_sync", 100, &MassChanger::syncCallback, &mass_changer);
 
-    ros::ServiceServer testsrv = n.advertiseService<std_srvs::Empty::Request, std_srvs::Empty::Response>("start_trigger", boost::bind(testCallback, _1, _2, 3));
-    ros::Subscriber testsub = n.subscribe<custom_ros_msgs::CustomData>("q_sync", 100, boost::bind(callback, _1, mass_changer));
+    // ros::ServiceServer testsrv = n.advertiseService<std_srvs::Empty::Request, std_srvs::Empty::Response>("start_trigger", boost::bind(testCallback, _1, _2, 3));
+    // ros::Subscriber testsub = n.subscribe<custom_ros_msgs::CustomData>("q_sync", 100, boost::bind(callback, _1, mass_changer));
 
     ros::Rate loop(20);
 

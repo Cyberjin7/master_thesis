@@ -4,7 +4,7 @@ SyncPlayer::SyncPlayer(ros::NodeHandle handler, int time_delay)
 {
     this->q_pub = handler.advertise<custom_ros_msgs::CustomData>("q_sync", 100);
     this->q_ref_pub = handler.advertise<custom_ros_msgs::CustomData>("q_ref_sync", 100);
-    this->start_client = handler.serviceClient<experiment_srvs::Trigger>("start_trigger");
+    this->toggle_client = handler.serviceClient<experiment_srvs::Trigger>("toggle_trigger");
     this->play = false;
     this->delay = time_delay;
     this->node_start_time = ros::Time::now();
@@ -18,6 +18,7 @@ SyncPlayer::~SyncPlayer()
     
 }
 
+// make this external callback? Subscriber as well?
 void SyncPlayer::qCallback(const std_msgs::Float64::ConstPtr& msg)
 {
     this->synchronize();
@@ -27,24 +28,33 @@ void SyncPlayer::qCallback(const std_msgs::Float64::ConstPtr& msg)
     this->q_pub.publish(sync_msg);
 }
 
-bool SyncPlayer::startCallback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
+// Make this an external callback?
+bool SyncPlayer::toggleCallback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
 {
     ROS_INFO_STREAM("Received trigger");
-    this->playToggle(true);
+    this->playToggle();
+
 
     experiment_srvs::Trigger start_trigger;
-    start_trigger.request.trigger.data = true;
+    start_trigger.request.trigger.data = this->play;
     start_trigger.request.header.stamp = this->sync_time;
 
-    this->start_client.call(start_trigger);
+    this->toggle_client.call(start_trigger);
 
     return true;
 }
 
-void SyncPlayer::playToggle(bool play)
+void SyncPlayer::playToggle()
 {
-    this->play = play;
-    ROS_INFO_STREAM("Toggle is: " << play);
+    if (!this->play)
+    {
+        this->play = true;
+    }
+    else{
+        this->play = false;
+    }
+    // this->play = play;
+    ROS_INFO_STREAM("Toggle is: " << this->play);
 }
 
 void SyncPlayer::loadBag(std::string bag_path)
@@ -100,7 +110,7 @@ void SyncPlayer::synchronize()
         {
             this->bag.close();
             //this->play = false;
-            playToggle(false);
+            playToggle();
             ROS_WARN_STREAM("Finished playing trajectory!");
             this->sync_msg.value.data = 0;
         }
