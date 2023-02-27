@@ -35,11 +35,11 @@ bool SyncPlayer::toggleCallback(std_srvs::Empty::Request& request, std_srvs::Emp
     this->playToggle();
 
 
-    experiment_srvs::Trigger start_trigger;
-    start_trigger.request.trigger.data = this->play;
-    start_trigger.request.header.stamp = this->sync_time;
+    // experiment_srvs::Trigger start_trigger;
+    // start_trigger.request.trigger.data = this->play;
+    // start_trigger.request.header.stamp = this->sync_time;
 
-    this->toggle_client.call(start_trigger);
+    // this->toggle_client.call(start_trigger);
 
     return true;
 }
@@ -55,6 +55,11 @@ void SyncPlayer::playToggle()
     }
     // this->play = play;
     ROS_INFO_STREAM("Toggle is: " << this->play);
+    experiment_srvs::Trigger start_trigger;
+    start_trigger.request.trigger.data = this->play;
+    start_trigger.request.header.stamp = this->sync_time;
+
+    this->toggle_client.call(start_trigger);
 }
 
 void SyncPlayer::loadBag(std::string bag_path)

@@ -23,14 +23,15 @@ MassChanger::MassChanger(ros::NodeHandle handle)
     std::uniform_int_distribution<int> uniform_dist(this->time_limits["min_length"],this->time_limits["max_length"]);
 
     std::shuffle(std::begin(this->mass_order), std::end(this->mass_order), rng);
-    for (auto i: this->mass_order)
-    {
-        ROS_INFO_STREAM("Mass: " << i);
-        this->mass_time.push_back(uniform_dist(rng));
-    }
+    // for (auto i: this->mass_order)
+    // {
+    //     ROS_INFO_STREAM("Mass: " << i);
+    //     this->mass_time.push_back(uniform_dist(rng));
+    // }
 
     for (int i = 0; i < this->mass_order.size(); ++i)
     {
+        ROS_INFO_STREAM("Mass: " << this->mass_order[i]);
         this->mass_time.push_back(uniform_dist(rng));
         ROS_INFO_STREAM("Duration: " << this->mass_time[i]);
     }
@@ -56,12 +57,6 @@ bool MassChanger::toggleCallback(experiment_srvs::Trigger::Request &req, experim
     if (this->start)
     {
         this->start_time = req.header.stamp;
-        // experiment_srvs::MassChange change_mass;
-        // change_mass.request.mass.data = this->mass_list[this->mass_order[this->mass_iterator]];
-        // this->mass_client.call(change_mass);
-        // ROS_INFO_STREAM("Change mass to: " << change_mass.request.mass.data);
-        // ROS_INFO_STREAM("For " << this->mass_time[this->mass_iterator] << " seconds");
-        // ++(this->mass_iterator);
         this->changeMass();
     }
     return true;
@@ -73,17 +68,10 @@ void MassChanger::syncCallback(const custom_ros_msgs::CustomData::ConstPtr &msg)
     this->updateTime(msg->header.stamp);
     if (this->start)
     {
-        //ROS_INFO_STREAM("Diff: " << (this->current_time - this->start_time).toSec());
         if ((this->current_time - this->start_time > ros::Duration(this->mass_time[this->mass_iterator-1])) 
                                                         && (this->mass_iterator < this->mass_order.size()))
         {
             this->start_time = this->current_time;
-            // experiment_srvs::MassChange change_mass;
-            // change_mass.request.mass.data = this->mass_list[this->mass_order[this->mass_iterator]];
-            // this->mass_client.call(change_mass);
-            // ROS_INFO_STREAM("Change mass to: " << change_mass.request.mass.data);
-            // ROS_INFO_STREAM("For " << this->mass_time[this->mass_iterator] << " seconds");
-            // ++(this->mass_iterator);
             this->changeMass();
         }
     }

@@ -1,0 +1,8 @@
+<launch>
+    <arg name="DIR" default="$(find experiment)/launch/bag"/>
+    <arg name="SUBJECT" default="test"/>
+    <node pkg="experiment" type="experiment_recorder" name="bag_recorder" output="screen"> 
+        <param  name="save_dir" value="$(arg DIR)" type="str"/>
+        <param  name="subject" value="$(arg SUBJECT)" type="str"/>
+    </node>
+</launch>
