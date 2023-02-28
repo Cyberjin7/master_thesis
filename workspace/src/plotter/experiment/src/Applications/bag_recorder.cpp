@@ -90,7 +90,6 @@ int main(int argc, char **argv)
 
     ros::init(argc, argv, "recorder");
     ros::NodeHandle n;
-    ros::Rate loop(20);
 
     std::string bag_dir;
     std::string subject;
@@ -98,6 +97,12 @@ int main(int argc, char **argv)
     ros::param::get("~subject", subject);
     ros::param::get("~save_dir", bag_dir);
     fs::path bag_file = bagRecorder::makePath(subject, bag_dir);
+
+    int rate;
+    ros::param::get("~rate", rate);
+    ROS_INFO_STREAM("Rate: " << rate);
+
+    ros::Rate loop(rate);
 
     // bagRecorder::bag.open(bag_file, rosbag::bagmode::Write);
     

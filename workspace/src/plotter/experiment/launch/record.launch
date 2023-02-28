@@ -4,5 +4,6 @@
     <node pkg="experiment" type="experiment_recorder" name="bag_recorder" output="screen"> 
         <param  name="save_dir" value="$(arg DIR)" type="str"/>
         <param  name="subject" value="$(arg SUBJECT)" type="str"/>
+        <rosparam command="load" file="$(find experiment)/launch/config/exp_param.yaml"/>
     </node>
 </launch>

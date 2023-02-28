@@ -29,6 +29,9 @@ int main(int argc, char **argv)
     ros::param::get("~bag_path", bag_path);
     ros::param::get("~delay", delay);
 
+    int rate;
+    ros::param::get("~rate", rate);
+    ROS_INFO_STREAM("Rate: " << rate);
     ROS_INFO_STREAM("Path is: " << bag_path);
     ROS_INFO_STREAM("Delay is:" << delay);
 
@@ -49,7 +52,7 @@ int main(int argc, char **argv)
     // ros::ServiceServer start_srv = n.advertiseService<std_srvs::Empty::Request, std_srvs::Empty::Response>("user_trigger", boost::bind(startCallback, _1, _2, &player));
     // Source: https://answers.ros.org/question/63991/how-to-make-callback-function-called-by-several-subscriber/?answer=63998#post-id-63998 
     ros::ServiceServer start_srv = n.advertiseService("user_trigger", &SyncPlayer::toggleCallback, &player);
-    ros::Rate loop(20);
+    ros::Rate loop(rate);
 
     while (ros::ok())
     {

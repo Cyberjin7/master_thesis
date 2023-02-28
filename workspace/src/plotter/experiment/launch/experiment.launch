@@ -1,0 +1,6 @@
+<launch>
+    <arg name="RECORD" default="false"/>
+    <include file="$(find experiment)/launch/player.launch"/>
+    <include file="$(find experiment)/launch/mass_changer.launch"/>
+    <include file="$(find experiment)/launch/record.launch" if="$(arg RECORD)"/>
+</launch>

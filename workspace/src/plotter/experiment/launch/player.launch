@@ -4,6 +4,9 @@
     <node pkg="experiment" type="experiment_sync_test" name="sync_player" output="screen"> 
         <param  name="bag_path" value="$(arg BAG)" type="str"/> <!--Adapt value for different input structure-->
         <param  name="delay" value="$(arg DELAY)" type="int"/>
+        <rosparam command="load" file="$(find experiment)/launch/config/exp_param.yaml"/>
     </node>
-    <node pkg="experiment" type="experiment_player_trigger" name="player_trigger" output="screen"/>
+    <node pkg="experiment" type="experiment_player_trigger" name="player_trigger" output="screen">
+        <rosparam command="load" file="$(find experiment)/launch/config/exp_param.yaml"/>
+    </node>
 </launch>
