@@ -18,7 +18,7 @@ namespace bagRecorder
     {
         if(bagRecorder::record)
         {
-            ROS_INFO_STREAM("Writing q");
+            // ROS_INFO_STREAM("Writing q");
             bagRecorder::bag.write("q", msg->header.stamp, msg);
         }
     }
@@ -27,7 +27,7 @@ namespace bagRecorder
     {
         if(bagRecorder::record)
         {
-            ROS_INFO_STREAM("Writing traj");
+            // ROS_INFO_STREAM("Writing traj");
             bagRecorder::bag.write("traj", msg->header.stamp, msg);
         }
     }

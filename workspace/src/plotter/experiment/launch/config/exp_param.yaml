@@ -3,4 +3,4 @@ time:
     min_length: 5,
     max_length: 10
   }
-rate: 20
+rate: 200

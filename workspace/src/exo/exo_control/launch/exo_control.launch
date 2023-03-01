@@ -6,6 +6,7 @@
           type="exo_control"
           output="screen">
   <rosparam file="$(find exo_control)/launch/configs/control_params.yaml" command="load"/>
+  <rosparam command="load" file="$(find experiment)/launch/config/exp_param.yaml"/>
   </node>
 
 </launch>

@@ -22,15 +22,19 @@ void checkRange(double& q1, double& qd1, double& qdd1) {
 
 int main(int argc, char** argv)
 {
-    int f = 200;
+    // int f = 200;
     ros::init(argc, argv, "exo_control",
         ros::init_options::AnonymousName);
     ros::NodeHandle n;
     ros::Publisher exo_pub = n.advertise<std_msgs::Float64>("/q_control_publisher", 10);
     // ros::Publisher pub_q_state = n.advertise<exo_control::q>("/q_state", 1);
-    ros::Publisher pub_q_state = n.advertise<std_msgs::Float64>("/q_state", 1);
+    // ros::Publisher pub_q_state = n.advertise<std_msgs::Float64>("/q_state", 1);
+    ros::Publisher pub_q_state = n.advertise<std_msgs::Float64>("q", 100);
     // ros::Publisher pub_q_des = n.advertise<exo_control::q>("/q_des", 1);
     // ros::Publisher pub_q_intention = n.advertise<std_msgs::Float64>("/q_intention", 1);
+    int f;
+    ros::param::get("~rate", f);
+    ROS_INFO_STREAM("Rate: " << f);
     ros::Rate r(f);
 
     std_msgs::Float64 q_state;
@@ -172,6 +176,7 @@ int main(int argc, char** argv)
 
         std_msgs::Float64 msg;
         msg.data = q1 * 180 / 3.14159265359;
+        ROS_INFO_STREAM("q: " << msg.data);
         exo_pub.publish(msg);
         
         // ROS_WARN_STREAM("qdd1="<<qdd1);
@@ -179,7 +184,7 @@ int main(int argc, char** argv)
         //ROS_WARN_STREAM("tau = " << tao << "q1="<<msg.data);
         // ROS_WARN_STREAM("q1=" << q1 * 180 / 3.14159265359 << " degrees");
 
-        q_state.data = q1 * 180 / 3.14159265359;        
+        q_state.data = q1 * 180 / 3.14159265359;
         // q_state.q = q1 * 180 / 3.14159265359;
         // q_state.qd = qd1 * 180 / 3.14159265359;
         // q_state.qdd = qdd1 * 180 / 3.14159265359;
