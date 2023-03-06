@@ -158,36 +158,27 @@ int main(int argc, char** argv)
         g_matrix = (gy*cos(q1) - gx*sin(q1))*(L2+L3)*m2/2 + (gy*cos(q1) - gx*sin(q1))*(2*L2 + L3)*m3/2 - k1*(theta1-q1);
         b_matrix = b1;
 
-
         // call position control update
         // tao = posControl.update(delta_t,q1,qd1,qdd1);
         // ROS_WARN_STREAM("tao=" << tao);
 
 
-        if (forceControl.get_m_prox_upper() > forceControl.get_m_prox_lower())
-        {
-            // Ws = - forceControl.get_m_prox_upper();
-            //ROS_INFO_STREAM("Upper Ws: " << Ws);
-        }
-        else 
-        {
-            // Ws = forceControl.get_m_prox_lower();
-            //ROS_INFO_STREAM("Lower Ws: " << Ws);
-        }
-        // Ws = forceControl.get_m_f_upper();
-        // Ws = forceControl.get_m_f_lower();
-        double force_change = forceControl.forceFilterreading[9] - forceControl.forceFilterreading[8];
+        double force_change = forceControl.forceFilterreading[9] - forceControl.forceFilterreading[5];
+        ROS_INFO_STREAM("Change: " << force_change);
         if (force_change > 0.01) // extension
         {
-            Ws = force_change*10.0;
+            ROS_INFO_STREAM("Down: ");
+            Ws = -force_change*10.0;
         }
         else if (force_change < -0.01) // contraction
         {
-            Ws = force_change*10.0;
+            ROS_INFO_STREAM("Up: ");
+            Ws = -force_change*10.0;
         }
         else{
             Ws = 0.0;
         }
+        // Ws = -force_change * 20;
 
         // // call force control update
         tao = forceControl.update(Ws) + g_matrix;
@@ -202,7 +193,7 @@ int main(int argc, char** argv)
 
         std_msgs::Float64 msg;
         msg.data = q1 * 180 / 3.14159265359;
-        ROS_INFO_STREAM("q: " << msg.data);
+        // ROS_INFO_STREAM("q: " << msg.data);
         exo_pub.publish(msg);
         
         // ROS_WARN_STREAM("qdd1="<<qdd1);

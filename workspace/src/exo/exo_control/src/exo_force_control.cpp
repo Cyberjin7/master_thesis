@@ -130,7 +130,7 @@ namespace ExoControllers{
                 forceFilterreading[1] = forceFilterreading[2];
                 forceFilterreading[2] = forceFilterreading[3];
                 forceFilterreading[3] = forceFilterreading[4];
-                forceFilterreading[4] = cell.force[2]/gain;
+                forceFilterreading[4] = (cell.force[0] + cell.force[1] + cell.force[2])/gain;
 
                 forceFilterreading[5] = forceFilterreading[6];
                 forceFilterreading[6] = forceFilterreading[7];
