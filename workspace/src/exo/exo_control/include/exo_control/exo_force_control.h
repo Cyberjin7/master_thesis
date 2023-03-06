@@ -5,6 +5,7 @@
 #include <Eigen/Dense>
 #include <tum_ics_skin_msgs/SkinCellDataArray.h>
 // #include <geometry_msgs/Vector3.h>
+#include <QVector>
 
 using namespace Eigen;
 using std::string;
@@ -27,9 +28,16 @@ namespace ExoControllers{
             double m_f_upper;
             double m_f_lower;
             // pthread_mutex_t count_mutex;
+            ros::Publisher cell6;
+            ros::Publisher cell7;
+            ros::Publisher cell8;
+            ros::Publisher cell11;
+            ros::Publisher cell12;
+            ros::Publisher cell13;
+            ros::Publisher force_pub;
             
         public:
-            ForceControl(double L2);
+            ForceControl(double L2, ros::NodeHandle handle);
             ~ForceControl();
             bool init(double W_des);
             double update(double Ws);
@@ -46,6 +54,9 @@ namespace ExoControllers{
             double get_m_prox_lower();
             double get_m_f_upper();
             double get_m_f_lower();
+
+            QVector<double> forceFilterreading;
+            double force_filtered;
     };
 }
 

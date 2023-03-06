@@ -2,14 +2,16 @@
 
 namespace ExoControllers{
 
-    PosControl::PosControl(double L1, double L2, double m2, double b1, double k1, 
+    PosControl::PosControl(double L1, double L2, double L3, double m2, double m3, double b1, double k1, 
                             double theta1, double gx, double gy)    
     {
         ROS_INFO_STREAM("Position Controller Created");
 
         m_L1 = L1;
         m_L2 = L2;
+        m_L3 = L3;
         m_m2 = m2;
+        m_m3 = m3;
         m_b1 = b1;
         m_k1 = k1;
         m_theta1 = theta1;
@@ -30,6 +32,9 @@ namespace ExoControllers{
         m_qStart = Vector3d::Zero(); 
         m_qEnd = Vector3d::Zero(); 
         m_timeEnd = 0.0;
+
+        error_gain = 0.0;
+        prev_error = 0.0;
 
         std::string ns = "~pos_ctrl";
         std::stringstream s; 
@@ -109,11 +114,18 @@ namespace ExoControllers{
         Yr(0,4) = cos(q1);
         Yr(0,5) = 1;
 
-        Theta(0,0) = m_I233 + m_L2 * m_L2 * m_m2 / 4; // to Do
+        // Theta(0,0) = m_I233 + m_L2 * m_L2 * m_m2 / 4; // to Do 
+        // Theta(1,0) = m_b1;
+        // Theta(2,0) = m_k1;
+        // Theta(3,0) = -m_L2 / 2 * m_gx * m_m2;
+        // Theta(4,0) = m_L2 / 2 * m_gy * m_m2;
+        // Theta(5,0) = -m_k1 * m_theta1;
+
+        Theta(0,0) = m_I233 + (std::pow(m_L2+m_L3, 2)*m_m2/4) + (std::pow(2*m_L2+m_L3, 2)*m_m3/4);
         Theta(1,0) = m_b1;
         Theta(2,0) = m_k1;
-        Theta(3,0) = -m_L2 / 2 * m_gx * m_m2;
-        Theta(4,0) = m_L2 / 2 * m_gy * m_m2;
+        Theta(3,0) = -m_gx*(m_m2*(m_L2+m_L3) + m_m3*(2*m_L2 + m_L3))/2;
+        Theta(4,0) = m_gy*(m_m2*(m_L2+m_L3) + m_m3*(2*m_L2 + m_L3))/2;
         Theta(5,0) = -m_k1 * m_theta1;
 
         MatrixXd taor = Yr*Theta; 
@@ -149,9 +161,11 @@ namespace ExoControllers{
 
         double deltaQ = q1 - m_q_des;
         double deltaQd = qd1 - m_qd_des;// to Do! 
+        error_gain = error_gain = 0.5 * (deltaQ + prev_error) / 20;
+        prev_error = deltaQ;
 
-        double qd1r = qd1 - m_kp*deltaQ;// to Do!
-        double qdd1r = qdd1 - m_kp*deltaQd; 
+        double qd1r = qd1 - m_kp*deltaQ - m_ki*error_gain;// to Do!
+        double qdd1r = qdd1 - m_kp*deltaQd - m_ki*deltaQ; 
 
         double Sq = qd1 - qd1r;// to DO! 
         m_tao = -m_kd*Sq + YrTheta(q1, qd1, qd1r, qdd1r);// to Do! 
@@ -168,7 +182,7 @@ namespace ExoControllers{
         // ROS_WARN_STREAM("qd1r=" << qd1r * 180 / 3.14159265359);
         // ROS_WARN_STREAM("qdd1r=" << qdd1r * 180 / 3.14159265359);
         // ROS_WARN_STREAM("Sq=" << Sq * 180 / 3.14159265359);
-        // ROS_WARN_STREAM("YrTheta=" << YrTheta(q1, qd1, qd1r, qdd1r));
+        ROS_WARN_STREAM("YrTheta=" << YrTheta(q1, qd1, qd1r, qdd1r));
 
         return m_tao;
     }

@@ -22,7 +22,9 @@ namespace ExoControllers{
         double m_I233;
         double m_L1;
         double m_L2;
+        double m_L3;
         double m_m2;
+        double m_m3;
         double m_b1; 
         double m_k1;
         double m_theta1;
@@ -36,8 +38,11 @@ namespace ExoControllers{
         Vector3d m_qEnd;
         double m_timeEnd;
 
+        double error_gain;
+        double prev_error;
+
       public:
-        PosControl(double L1, double L2, double m2, double b1, double k1, double theta1, double gx, double gy);
+        PosControl(double L1, double L2, double L3, double m2, double m3, double b1, double k1, double theta1, double gx, double gy);
         ~PosControl();
 
         void trajGen(double qi, double qf, double qpi,

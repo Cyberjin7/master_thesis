@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
   geometry_msgs
+  experiment_srvs
   tf2
   tf2_geometry_msgs
   tf2_ros
@@ -48,6 +49,7 @@ catkin_package(
         tum_ics_params
         std_msgs
         geometry_msgs
+        experiment_srvs
         message_runtime
         tf2
         tf2_ros

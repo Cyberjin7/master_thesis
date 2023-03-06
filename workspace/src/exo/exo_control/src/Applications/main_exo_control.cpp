@@ -3,6 +3,7 @@
 #include <exo_control/exo_pos_control.h>
 #include <exo_control/exo_force_control.h>
 #include <exo_control/q.h>
+#include "experiment_srvs/MassChange.h"
 
 // #include <pthread.h>
 
@@ -18,6 +19,13 @@ void checkRange(double& q1, double& qd1, double& qdd1) {
         qd1 = 0;
         qdd1 = 0;
     }
+}
+
+bool change_mass(experiment_srvs::MassChange::Request &req, experiment_srvs::MassChange::Response &res, double *mass)
+{
+    *mass = req.mass.data;
+    ROS_INFO_STREAM("Received mass: " << mass);
+    return true;
 }
 
 int main(int argc, char** argv)
@@ -55,11 +63,21 @@ int main(int argc, char** argv)
     s.str("");
     s << ns;
     ros::param::get(s.str(), L2);
+    double L3;
+    ns = "~L3";
+    s.str("");
+    s << ns;
+    ros::param::get(s.str(), L3);
     double m2;
     ns = "~m2";
     s.str("");
     s << ns;
     ros::param::get(s.str(), m2);
+    double m3;
+    ns = "~m3";
+    s.str("");
+    s << ns;
+    ros::param::get(s.str(), m3);
     double b1;
     ns = "~b1";
     s.str("");
@@ -75,6 +93,7 @@ int main(int argc, char** argv)
     s.str("");
     s << ns;
     ros::param::get(s.str(), theta1);
+    theta1 = deg2rad(theta1);
     double I233;
     ns = "~I233";
     s.str("");
@@ -89,8 +108,7 @@ int main(int argc, char** argv)
     double tao = 0;
 
     //init params 
-    //double q1 = deg2rad(90);
-    double q1 = deg2rad(90);
+    double q1 = deg2rad(45);
     double qd1 = 0;
     double qdd1 = 0;
 
@@ -105,25 +123,26 @@ int main(int argc, char** argv)
     double b_matrix;
 
     // Initialize PosControl object
-     ExoControllers::PosControl posControl(L1, L2, m2, b1, k1, theta1, gx, gy);
+     ExoControllers::PosControl posControl(L1, L2, L3, m2, m3, b1, k1, theta1, gx, gy);
      Vector3d qEnd;
-     qEnd << deg2rad(45),0.0,0.0;
+     qEnd << deg2rad(90),0.0,0.0;
      double timeEnd = 5;
      posControl.init(qEnd,timeEnd);
 
     //load force control
-    ExoControllers::ForceControl forceControl(L2);
+    ExoControllers::ForceControl forceControl(L2, n);
     double W_des = 0;
     double Ws = 0;
 
     forceControl.init(W_des);
-    ros::Subscriber sub_g = n.subscribe("patch1", 1000, &ExoControllers::ForceControl::gCallback, &forceControl);
-    ros::Subscriber sub_pUp = n.subscribe("patch3", 1000, &ExoControllers::ForceControl::pUpCallback, &forceControl);
-    ros::Subscriber sub_pLow = n.subscribe("patch2", 1000, &ExoControllers::ForceControl::pLowCallback, &forceControl);
-    // ros::Subscriber sub_fUp = n.subscribe("patch5", 1000, &ExoControllers::ForceControl::fUpCallback, &forceControl);
-    // ros::Subscriber sub_fLow = n.subscribe("patch4", 1000, &ExoControllers::ForceControl::fLowCallback, &forceControl);
+    ros::Subscriber sub_g = n.subscribe("patch1", 1000, &ExoControllers::ForceControl::gCallback, &forceControl); // patch1: upper arm
+    ros::Subscriber sub_pUp = n.subscribe("patch3", 1000, &ExoControllers::ForceControl::fLowCallback, &forceControl); // patch3: bottom inner
+    // ros::Subscriber sub_pLow = n.subscribe("patch2", 1000, &ExoControllers::ForceControl::pLowCallback, &forceControl); // patch2: bottom outer
+    ros::Subscriber sub_fUp = n.subscribe("patch5", 1000, &ExoControllers::ForceControl::fUpCallback, &forceControl); // patch5: upper inner
+    // ros::Subscriber sub_fLow = n.subscribe("patch4", 1000, &ExoControllers::ForceControl::pUpCallback, &forceControl); // patch4: upper outer
 
-    // ros::Subscriber sub_g = n.subscribe("skin_acc", 1000, &ExoControllers::ForceControl::gCallback, &forceControl);
+
+    ros::ServiceServer mass_serv = n.advertiseService<experiment_srvs::MassChange::Request,experiment_srvs::MassChange::Response>("change_mass", boost::bind(change_mass, _1, _2, &m3));
 
     while (ros::ok())
     {
@@ -132,40 +151,47 @@ int main(int argc, char** argv)
         gz = g * forceControl.get_m_gz();
         // ROS_INFO_STREAM("Main acc: x: " << gx << ", y: " << gy <<", z: " << gz); //30deg = 0.5236rad
 
-        Ws = forceControl.get_m_prox_upper();
-        Ws = forceControl.get_m_prox_lower();
-        if (forceControl.get_m_prox_upper() > forceControl.get_m_prox_lower())
-        {
-            Ws = - forceControl.get_m_prox_upper();
-            //ROS_INFO_STREAM("Upper Ws: " << Ws);
-        }
-        else 
-        {
-            Ws = forceControl.get_m_prox_lower();
-            //ROS_INFO_STREAM("Lower Ws: " << Ws);
-        }
-        // Ws = forceControl.get_m_f_upper();
-        // Ws = forceControl.get_m_f_lower();
-        //cd tutorial-code/exo_ws/ROS_INFO_STREAM("Main Ws: " << Ws);
+        // m_matrix = I233 + L2 * L2 * m2 / 4;
+        m_matrix = I233 + (std::pow(L2+L3, 2)*m2/4) + (std::pow(2*L2+L3, 2)*m3/4);
+        c_matrix = 0;
+        // g_matrix = -L2 / 2 * gx * m2 * sin(q1) + L2 / 2 * gy * m2 * cos(q1) - k1 * (theta1 - q1);
+        g_matrix = (gy*cos(q1) - gx*sin(q1))*(L2+L3)*m2/2 + (gy*cos(q1) - gx*sin(q1))*(2*L2 + L3)*m3/2 - k1*(theta1-q1);
+        b_matrix = b1;
+
 
         // call position control update
         // tao = posControl.update(delta_t,q1,qd1,qdd1);
         // ROS_WARN_STREAM("tao=" << tao);
 
-        m_matrix = I233 + L2 * L2 * m2 / 4;
-        c_matrix = 0;
-        g_matrix = -L2 / 2 * gx * m2 * sin(q1) + L2 / 2 * gy * m2 * cos(q1) - k1 * (theta1 - q1);
-        b_matrix = b1;
+
+        if (forceControl.get_m_prox_upper() > forceControl.get_m_prox_lower())
+        {
+            // Ws = - forceControl.get_m_prox_upper();
+            //ROS_INFO_STREAM("Upper Ws: " << Ws);
+        }
+        else 
+        {
+            // Ws = forceControl.get_m_prox_lower();
+            //ROS_INFO_STREAM("Lower Ws: " << Ws);
+        }
+        // Ws = forceControl.get_m_f_upper();
+        // Ws = forceControl.get_m_f_lower();
+        double force_change = forceControl.forceFilterreading[9] - forceControl.forceFilterreading[8];
+        if (force_change > 0.01) // extension
+        {
+            Ws = force_change*10.0;
+        }
+        else if (force_change < -0.01) // contraction
+        {
+            Ws = force_change*10.0;
+        }
+        else{
+            Ws = 0.0;
+        }
 
         // // call force control update
         tao = forceControl.update(Ws) + g_matrix;
-       
-        // // ROS_WARN_STREAM("tao=" << tao);
-
-        // m_matrix = I233 + L2 * L2 * m2 / 4;
-        // c_matrix = 0;
-        // g_matrix = -L2 / 2 * gx * m2 * sin(q1) + L2 / 2 * gy * m2 * cos(q1) - k1 * (theta1 - q1);
-        // b_matrix = b1;
+        // ROS_WARN_STREAM("tao=" << tao);
 
         // calculate qdd1 and integrate
         qdd1 = (tao - b_matrix * qd1 - c_matrix * qd1 - g_matrix) / m_matrix;
