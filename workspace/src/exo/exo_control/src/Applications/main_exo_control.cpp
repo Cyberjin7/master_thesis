@@ -2,6 +2,7 @@
 #include "std_msgs/Float64.h"
 #include <exo_control/exo_pos_control.h>
 #include <exo_control/exo_force_control.h>
+#include "exo_control/exo_calibration.h"
 #include <exo_control/q.h>
 #include "experiment_srvs/MassChange.h"
 
@@ -105,6 +106,17 @@ int main(int argc, char** argv)
     s << ns;
     ros::param::get(s.str(), g);
 
+    double interval;
+    ros::param::get("~calibration/interval", interval);
+    double duration;
+    ros::param::get("~calibration/duration", duration);
+    double wait;
+    ros::param::get("~calibration/wait", wait);
+    double max_angle;
+    ros::param::get("~max", max_angle);
+    double min_angle;
+    ros::param::get("~min", min_angle);
+
     double tao = 0;
 
     //init params 
@@ -134,6 +146,14 @@ int main(int argc, char** argv)
     double W_des = 0;
     double Ws = 0;
 
+    // Calibration
+    // double interval_angle, double interval_duration, double wait_duration, double angle_min, double angle_max
+    ExoControllers::Calibration calibrator(interval, duration, wait, min_angle, max_angle);
+    calibrator.set_start(true);
+    for(auto i: calibrator.get_cal_angles()){
+        ROS_INFO_STREAM("Calibration angle: " << i);
+    }
+
     forceControl.init(W_des);
     ros::Subscriber sub_g = n.subscribe("patch1", 1000, &ExoControllers::ForceControl::gCallback, &forceControl); // patch1: upper arm
     ros::Subscriber sub_pUp = n.subscribe("patch3", 1000, &ExoControllers::ForceControl::fLowCallback, &forceControl); // patch3: bottom inner
@@ -162,39 +182,50 @@ int main(int argc, char** argv)
         // tao = posControl.update(delta_t,q1,qd1,qdd1);
         // ROS_WARN_STREAM("tao=" << tao);
 
-
-        double force_change = forceControl.forceFilterreading[9] - forceControl.forceFilterreading[5];
-        ROS_INFO_STREAM("Change: " << force_change);
-        if (force_change > 0.01) // extension
+        if (calibrator.get_start())
         {
-            ROS_INFO_STREAM("Down: ");
-            Ws = -force_change*10.0;
+            double tmp;
+            tmp = calibrator.calibrate(forceControl.forceFilterreading[9]);
+            std_msgs::Float64 msg;
+            msg.data = tmp;
+            exo_pub.publish(msg);
         }
-        else if (force_change < -0.01) // contraction
+        else
         {
-            ROS_INFO_STREAM("Up: ");
-            Ws = -force_change*10.0;
-        }
-        else{
-            Ws = 0.0;
-        }
-        // Ws = -force_change * 20;
+            double force_change = forceControl.forceFilterreading[9] - forceControl.forceFilterreading[5];
+            ROS_INFO_STREAM("Change: " << force_change);
+            if (force_change > 0.01) // extension
+            {
+                ROS_INFO_STREAM("Down: ");
+                Ws = -force_change*10.0;
+            }
+            else if (force_change < -0.01) // contraction
+            {
+                ROS_INFO_STREAM("Up: ");
+                Ws = -force_change*10.0;
+            }
+            else{
+                Ws = 0.0;
+            }
+            // Ws = -force_change * 20;
 
-        // // call force control update
-        tao = forceControl.update(Ws) + g_matrix;
-        // ROS_WARN_STREAM("tao=" << tao);
+            // // call force control update
+            tao = forceControl.update(Ws) + g_matrix;
+            // ROS_WARN_STREAM("tao=" << tao);
 
-        // calculate qdd1 and integrate
-        qdd1 = (tao - b_matrix * qd1 - c_matrix * qd1 - g_matrix) / m_matrix;
-        qd1 = delta_t * qdd1 + qd1;
-        q1 = delta_t * qd1 + q1;
+            // calculate qdd1 and integrate
+            qdd1 = (tao - b_matrix * qd1 - c_matrix * qd1 - g_matrix) / m_matrix;
+            qd1 = delta_t * qdd1 + qd1;
+            q1 = delta_t * qd1 + q1;
+            
+            checkRange(q1, qd1, qdd1);
+
+            std_msgs::Float64 msg;
+            msg.data = q1 * 180 / 3.14159265359;
+            // ROS_INFO_STREAM("q: " << msg.data);
+            exo_pub.publish(msg);
+        }
         
-        checkRange(q1, qd1, qdd1);
-
-        std_msgs::Float64 msg;
-        msg.data = q1 * 180 / 3.14159265359;
-        // ROS_INFO_STREAM("q: " << msg.data);
-        exo_pub.publish(msg);
         
         // ROS_WARN_STREAM("qdd1="<<qdd1);
         // ROS_WARN_STREAM("qd1="<<qd1);

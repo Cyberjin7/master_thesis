@@ -13,22 +13,28 @@ namespace ExoControllers
             bool start;
             bool record;
             double interval_angle;
-            double interval_duration;
-            double wait_duration;
-            double t;
-            std::vector<double> values;
-            std::map<double, double> cal_angles;
+            ros::Duration interval_duration;
+            ros::Duration wait_duration;
+            ros::Time t;
+            std::vector<double> temp_vals; // container to store values during each calibration angle
+            std::map<double, double> cal_values; // angles to calibrate at
+            std::vector<double> cal_angles;
+            int intv_iter;
         public:
-            Calibration(double interval_angle, double interval_duration);
+            Calibration(double interval_angle, double interval_duration, double wait_duration, double angle_min, double angle_max);
+            ~Calibration();
 
             bool get_start();
             bool get_record();
             double get_interval_angle();
-            double get_interval_duration();
-            double get_wait_duration();
-            double get_t();
+            ros::Duration get_interval_duration();
+            ros::Duration get_wait_duration();
+            ros::Time get_t();
+            std::vector<double> get_cal_angles();
 
-            void calibrate();
+            void set_start(bool toggle);
+
+            double calibrate(double force);
             double interp();
     };
 }

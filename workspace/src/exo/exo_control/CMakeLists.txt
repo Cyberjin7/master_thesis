@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0.2)
 project(exo_control)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+add_compile_options(-std=c++17)
 SET(TUM_ICS_USE_QT5 TRUE)
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
@@ -115,6 +115,7 @@ file(GLOB_RECURSE MY_CTRL_INC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} FOLLOW_SYMLIN
 add_library(ExoControllers
     src/exo_force_control.cpp
     src/exo_pos_control.cpp
+    src/exo_calibration.cpp
     ${MY_CTRL_INC}
 )
 
