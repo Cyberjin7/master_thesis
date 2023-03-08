@@ -34,6 +34,7 @@ namespace ExoControllers{
             if(ros::Time::now() - t > this->wait_duration){
                 this->record = true;
                 ROS_INFO_STREAM("Wait over");
+                ROS_INFO_STREAM("Recording... ");
                 t = ros::Time::now();
             }
         }
@@ -65,8 +66,21 @@ namespace ExoControllers{
         return this->cal_angles[this->intv_iter];
     }
 
-    double Calibration::interp(){
-        return 0.0;
+    double Calibration::interp_force(double q){
+        ROS_INFO_STREAM("q: " << q);
+        int i;
+        for (i = 0; i < this->cal_angles.size(); ++i)
+        {
+            // The overlap in angles is intended. 
+            if((q >= this->cal_angles[i]) && (q <= this->cal_angles[i+1])){
+                break;
+            }
+        }
+        double q_i = this->cal_angles[i];
+        double q_i1 = this->cal_angles[i+1];
+        double force = (q - q_i)*(this->cal_values[q_i1] - this->cal_values[q_i])/(q_i1 - q_i) + this->cal_values[q_i];
+        // ROS_INFO_STREAM("Interp: " << force);
+        return force;
     }
 
     bool Calibration::get_record(){

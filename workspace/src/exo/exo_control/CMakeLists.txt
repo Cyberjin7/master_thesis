@@ -139,6 +139,7 @@ add_dependencies(ExoControllers
 
 set(APP_TARGETS
   exo_control
+  exo_cal_starter
 )
 
 foreach(target ${APP_TARGETS})

@@ -50,7 +50,7 @@ namespace ExoControllers{
             m_startFlag = true;
         }
 
-        m_tao = m_L2*m_kp*(Ws - m_W_des); // to DO
+        m_tao = m_L2*m_kp*(Ws - m_W_des); // Update for new model
 
         return m_tao;
     }

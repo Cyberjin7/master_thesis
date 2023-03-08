@@ -35,7 +35,7 @@ namespace ExoControllers
             void set_start(bool toggle);
 
             double calibrate(double force);
-            double interp();
+            double interp_force(double q);
     };
 }
 

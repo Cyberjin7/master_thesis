@@ -8,5 +8,6 @@
   <rosparam file="$(find exo_control)/launch/configs/control_params.yaml" command="load"/>
   <rosparam command="load" file="$(find experiment)/launch/config/exp_param.yaml"/>
   </node>
+<node name="exo_calibration" pkg="exo_control" type="exo_cal_starter" output="screen"/>
 
 </launch>

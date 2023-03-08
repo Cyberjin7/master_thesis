@@ -5,11 +5,12 @@
 #include "exo_control/exo_calibration.h"
 #include <exo_control/q.h>
 #include "experiment_srvs/MassChange.h"
+#include "std_srvs/Empty.h"
 
 // #include <pthread.h>
 
 double deg2rad(double degree) {
-    return (degree * 3.14159265359 / 180);
+    return (degree * 3.14159265359 / 180.0);
 }
 
 
@@ -26,6 +27,12 @@ bool change_mass(experiment_srvs::MassChange::Request &req, experiment_srvs::Mas
 {
     *mass = req.mass.data;
     ROS_INFO_STREAM("Received mass: " << mass);
+    return true;
+}
+
+bool start_cal(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res, ExoControllers::Calibration* exo_cal)
+{
+    exo_cal->set_start(true);
     return true;
 }
 
@@ -142,14 +149,14 @@ int main(int argc, char** argv)
      posControl.init(qEnd,timeEnd);
 
     //load force control
-    ExoControllers::ForceControl forceControl(L2, n);
+    ExoControllers::ForceControl forceControl((L2+L3)/2, n); // must adjust ForceControl to take into account new formula. For now just replace L2 with correct length
     double W_des = 0;
     double Ws = 0;
 
     // Calibration
     // double interval_angle, double interval_duration, double wait_duration, double angle_min, double angle_max
     ExoControllers::Calibration calibrator(interval, duration, wait, min_angle, max_angle);
-    calibrator.set_start(true);
+    // calibrator.set_start(true);
     for(auto i: calibrator.get_cal_angles()){
         ROS_INFO_STREAM("Calibration angle: " << i);
     }
@@ -161,8 +168,11 @@ int main(int argc, char** argv)
     ros::Subscriber sub_fUp = n.subscribe("patch5", 1000, &ExoControllers::ForceControl::fUpCallback, &forceControl); // patch5: upper inner
     // ros::Subscriber sub_fLow = n.subscribe("patch4", 1000, &ExoControllers::ForceControl::pUpCallback, &forceControl); // patch4: upper outer
 
+    ros::Publisher cal_pub = n.advertise<std_msgs::Float64>("cal_force", 100);
+
 
     ros::ServiceServer mass_serv = n.advertiseService<experiment_srvs::MassChange::Request,experiment_srvs::MassChange::Response>("change_mass", boost::bind(change_mass, _1, _2, &m3));
+    ros::ServiceServer cal_serv = n.advertiseService<std_srvs::Empty::Request,std_srvs::Empty::Response>("cal_trigger", boost::bind(start_cal, _1, _2, &calibrator));
 
     while (ros::ok())
     {
@@ -192,25 +202,32 @@ int main(int argc, char** argv)
         }
         else
         {
-            double force_change = forceControl.forceFilterreading[9] - forceControl.forceFilterreading[5];
-            ROS_INFO_STREAM("Change: " << force_change);
-            if (force_change > 0.01) // extension
-            {
-                ROS_INFO_STREAM("Down: ");
-                Ws = -force_change*10.0;
-            }
-            else if (force_change < -0.01) // contraction
-            {
-                ROS_INFO_STREAM("Up: ");
-                Ws = -force_change*10.0;
-            }
-            else{
-                Ws = 0.0;
-            }
+            // double force_change = forceControl.forceFilterreading[9] - forceControl.forceFilterreading[5];
+            // ROS_INFO_STREAM("Change: " << force_change);
+            // if (force_change > 0.01) // extension
+            // {
+            //     ROS_INFO_STREAM("Down: ");
+            //     Ws = -force_change*10.0;
+            // }
+            // else if (force_change < -0.01) // contraction
+            // {
+            //     ROS_INFO_STREAM("Up: ");
+            //     Ws = -force_change*10.0;
+            // }
+            // else{
+            //     Ws = 0.0;
+            // }
+
+            Ws = forceControl.forceFilterreading[9] - calibrator.interp_force(q1*180/3.14159265359);
+            ROS_INFO_STREAM("Calibrated Ws: " << -Ws);
+            std_msgs::Float64 cal_force;
+            cal_force.data = -Ws;
+            cal_pub.publish(cal_force);
             // Ws = -force_change * 20;
+            // Ws=0.0;
 
             // // call force control update
-            tao = forceControl.update(Ws) + g_matrix;
+            tao = forceControl.update(-Ws) + g_matrix;
             // ROS_WARN_STREAM("tao=" << tao);
 
             // calculate qdd1 and integrate
