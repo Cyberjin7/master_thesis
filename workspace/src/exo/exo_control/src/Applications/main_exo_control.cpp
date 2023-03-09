@@ -152,12 +152,15 @@ int main(int argc, char** argv)
     ExoControllers::ForceControl forceControl((L2+L3)/2, n); // must adjust ForceControl to take into account new formula. For now just replace L2 with correct length
     double W_des = 0;
     double Ws = 0;
+    double Ws_up = 0;
+    double Ws_down = 0;
 
     // Calibration
     // double interval_angle, double interval_duration, double wait_duration, double angle_min, double angle_max
-    ExoControllers::Calibration calibrator(interval, duration, wait, min_angle, max_angle);
+    ExoControllers::Calibration down_cal(interval, duration, wait, min_angle, max_angle);
+    ExoControllers::Calibration up_cal(interval, duration, wait, min_angle, max_angle);
     // calibrator.set_start(true);
-    for(auto i: calibrator.get_cal_angles()){
+    for(auto i: down_cal.get_cal_angles()){
         ROS_INFO_STREAM("Calibration angle: " << i);
     }
 
@@ -172,7 +175,7 @@ int main(int argc, char** argv)
 
 
     ros::ServiceServer mass_serv = n.advertiseService<experiment_srvs::MassChange::Request,experiment_srvs::MassChange::Response>("change_mass", boost::bind(change_mass, _1, _2, &m3));
-    ros::ServiceServer cal_serv = n.advertiseService<std_srvs::Empty::Request,std_srvs::Empty::Response>("cal_trigger", boost::bind(start_cal, _1, _2, &calibrator));
+    ros::ServiceServer cal_serv = n.advertiseService<std_srvs::Empty::Request,std_srvs::Empty::Response>("cal_trigger", boost::bind(start_cal, _1, _2, &down_cal));
 
     while (ros::ok())
     {
@@ -192,10 +195,12 @@ int main(int argc, char** argv)
         // tao = posControl.update(delta_t,q1,qd1,qdd1);
         // ROS_WARN_STREAM("tao=" << tao);
 
-        if (calibrator.get_start())
+        if (down_cal.get_start())
         {
+            up_cal.set_start(true);
             double tmp;
-            tmp = calibrator.calibrate(forceControl.forceFilterreading[9]);
+            tmp = down_cal.calibrate(forceControl.downFilterreading[9]);
+            up_cal.calibrate(forceControl.upFilterreading[9]);
             std_msgs::Float64 msg;
             msg.data = tmp;
             exo_pub.publish(msg);
@@ -218,16 +223,25 @@ int main(int argc, char** argv)
             //     Ws = 0.0;
             // }
 
-            Ws = forceControl.forceFilterreading[9] - calibrator.interp_force(q1*180/3.14159265359);
-            ROS_INFO_STREAM("Calibrated Ws: " << -Ws);
+            // Ws = forceControl.downFilterreading[9] - down_cal.interp_force(q1*180/3.14159265359);
+            Ws_down = forceControl.downFilterreading[9] - down_cal.interp_force(q1*180/3.14159265359);
+            Ws_up = forceControl.upFilterreading[9] - up_cal.interp_force(q1*180/3.14159265359);
+            ROS_INFO_STREAM("Calibrated Ws_down: " << -Ws_down);
+            ROS_INFO_STREAM("Calibrated Ws_up: " << -Ws_up);
             std_msgs::Float64 cal_force;
-            cal_force.data = -Ws;
+            cal_force.data = -Ws_down;
             cal_pub.publish(cal_force);
             // Ws = -force_change * 20;
             // Ws=0.0;
+            if(std::abs(Ws_up) > std::abs(Ws_down)){
+                Ws = -Ws_up;
+            }
+            else{
+                Ws = -Ws_down;
+            }
 
             // // call force control update
-            tao = forceControl.update(-Ws) + g_matrix;
+            tao = forceControl.update(Ws) + g_matrix;
             // ROS_WARN_STREAM("tao=" << tao);
 
             // calculate qdd1 and integrate

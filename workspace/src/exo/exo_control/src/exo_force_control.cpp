@@ -10,9 +10,11 @@ namespace ExoControllers{
         std::string ns="~force_ctrl";
         std::stringstream s;
         s.str("");
-        s<<ns<<"/kp";
-        ros::param::get(s.str(),m_kp);
-        ROS_WARN_STREAM("force m_kp: \n"<<m_kp);
+        s<<ns<<"/kp_up";
+        ros::param::get(s.str(),m_kp_up);
+        ros::param::get("~force_ctrl/kp_down", m_kp_down);
+        ROS_WARN_STREAM("force m_kp_up: \n"<<m_kp_up);
+        ROS_WARN_STREAM("force m_kp_down: \n"<<m_kp_down);
 
         m_L2 = L2;
         m_startFlag = false;
@@ -24,10 +26,11 @@ namespace ExoControllers{
         cell11 = handle.advertise<tum_ics_skin_msgs::SkinCellData>("cell11", 10);
         cell12 = handle.advertise<tum_ics_skin_msgs::SkinCellData>("cell12", 10);
         cell13 = handle.advertise<tum_ics_skin_msgs::SkinCellData>("cell13", 10);
-        force_pub = handle.advertise<std_msgs::Float64>("force", 10);
+        down_pub = handle.advertise<std_msgs::Float64>("down_force", 10);
+        up_pub = handle.advertise<std_msgs::Float64>("up_force", 10);
 
-        forceFilterreading = QVector<double>(10,0.0);
-        force_filtered = 0.0;
+        upFilterreading = QVector<double>(10,0.0);
+        downFilterreading = QVector<double>(10,0.0);
 
         // count_mutex = PTHREAD_MUTEX_INITIALIZER;
     }
@@ -50,7 +53,15 @@ namespace ExoControllers{
             m_startFlag = true;
         }
 
-        m_tao = m_L2*m_kp*(Ws - m_W_des); // Update for new model
+        if (Ws >= 0)
+        {
+            m_tao = m_L2*m_kp_up*(Ws - m_W_des);
+        }
+        else{
+            m_tao = m_L2*m_kp_down*(Ws - m_W_des);
+        }
+
+        // m_tao = m_L2*m_kp*(Ws - m_W_des); // Update for new model
 
         return m_tao;
     }
@@ -96,6 +107,26 @@ namespace ExoControllers{
             else if(cell.cellId == 8)
             {
                 cell8.publish(cell);
+                double gain = 4.350802359e+02;
+                upFilterreading[0] = upFilterreading[1];
+                upFilterreading[1] = upFilterreading[2];
+                upFilterreading[2] = upFilterreading[3];
+                upFilterreading[3] = upFilterreading[4];
+                upFilterreading[4] = (cell.force[0] + cell.force[1] + cell.force[2])/gain;
+
+                upFilterreading[5] = upFilterreading[6];
+                upFilterreading[6] = upFilterreading[7];
+                upFilterreading[7] = upFilterreading[8];
+                upFilterreading[8] = upFilterreading[9];
+                upFilterreading[9] = (upFilterreading[0] + upFilterreading[4]) 
+                                        + 4 * (upFilterreading[1] + upFilterreading[3]) + 6 * upFilterreading[2]
+                                        + ( -0.2615609657 * upFilterreading[5]) + (  1.3908552184 * upFilterreading[6])
+                                        + ( -2.8482276388 * upFilterreading[7]) + (  2.6821585601 * upFilterreading[8]);
+                
+                double up_filtered = upFilterreading[9];
+                std_msgs::Float64 force_msg;
+                force_msg.data = up_filtered;
+                up_pub.publish(force_msg);
             }
         }
     }
@@ -126,25 +157,25 @@ namespace ExoControllers{
             {
                 cell13.publish(cell);
                 double gain = 4.350802359e+02;
-                forceFilterreading[0] = forceFilterreading[1];
-                forceFilterreading[1] = forceFilterreading[2];
-                forceFilterreading[2] = forceFilterreading[3];
-                forceFilterreading[3] = forceFilterreading[4];
-                forceFilterreading[4] = (cell.force[0] + cell.force[1] + cell.force[2])/gain;
+                downFilterreading[0] = downFilterreading[1];
+                downFilterreading[1] = downFilterreading[2];
+                downFilterreading[2] = downFilterreading[3];
+                downFilterreading[3] = downFilterreading[4];
+                downFilterreading[4] = (cell.force[0] + cell.force[1] + cell.force[2])/gain;
 
-                forceFilterreading[5] = forceFilterreading[6];
-                forceFilterreading[6] = forceFilterreading[7];
-                forceFilterreading[7] = forceFilterreading[8];
-                forceFilterreading[8] = forceFilterreading[9];
-                forceFilterreading[9] = (forceFilterreading[0] + forceFilterreading[4]) 
-                                        + 4 * (forceFilterreading[1] + forceFilterreading[3]) + 6 * forceFilterreading[2]
-                                        + ( -0.2615609657 * forceFilterreading[5]) + (  1.3908552184 * forceFilterreading[6])
-                                        + ( -2.8482276388 * forceFilterreading[7]) + (  2.6821585601 * forceFilterreading[8]);
+                downFilterreading[5] = downFilterreading[6];
+                downFilterreading[6] = downFilterreading[7];
+                downFilterreading[7] = downFilterreading[8];
+                downFilterreading[8] = downFilterreading[9];
+                downFilterreading[9] = (downFilterreading[0] + downFilterreading[4]) 
+                                        + 4 * (downFilterreading[1] + downFilterreading[3]) + 6 * downFilterreading[2]
+                                        + ( -0.2615609657 * downFilterreading[5]) + (  1.3908552184 * downFilterreading[6])
+                                        + ( -2.8482276388 * downFilterreading[7]) + (  2.6821585601 * downFilterreading[8]);
                 
-                force_filtered = forceFilterreading[9];
+                double down_filtered = downFilterreading[9];
                 std_msgs::Float64 force_msg;
-                force_msg.data = force_filtered;
-                force_pub.publish(force_msg);
+                force_msg.data = down_filtered;
+                down_pub.publish(force_msg);
             }
 
         }

@@ -16,7 +16,8 @@ namespace ExoControllers{
         private:
             ros::NodeHandle n;
             double m_L2;
-            double m_kp;
+            double m_kp_up;
+            double m_kp_down;
             bool m_startFlag;
             double m_W_des;
             double m_tao;
@@ -34,7 +35,8 @@ namespace ExoControllers{
             ros::Publisher cell11;
             ros::Publisher cell12;
             ros::Publisher cell13;
-            ros::Publisher force_pub;
+            ros::Publisher down_pub;
+            ros::Publisher up_pub;
             
         public:
             ForceControl(double L2, ros::NodeHandle handle);
@@ -55,8 +57,8 @@ namespace ExoControllers{
             double get_m_f_upper();
             double get_m_f_lower();
 
-            QVector<double> forceFilterreading;
-            double force_filtered;
+            QVector<double> downFilterreading;
+            QVector<double> upFilterreading;
     };
 }
 

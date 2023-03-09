@@ -17,7 +17,8 @@ pos_ctrl:
   kd: 3.0
 
 force_ctrl:
-  kp: 7.0
+  kp_up: 10.0
+  kp_down: 10.0
 
 calibration:
   interval: 10.0
