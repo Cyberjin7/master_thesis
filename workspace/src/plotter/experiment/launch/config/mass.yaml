@@ -1,6 +1,6 @@
 mass:
   {
-    light: -2.0,
+    light: -1.0,
     normal: 0.0,
-    heavy: 2.0
+    heavy: 1.0
   }

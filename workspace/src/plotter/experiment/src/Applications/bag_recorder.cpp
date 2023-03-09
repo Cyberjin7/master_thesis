@@ -108,7 +108,7 @@ int main(int argc, char **argv)
     
     ros::Subscriber q_sub = n.subscribe("q_sync", 100, bagRecorder::qCallback);
     ros::Subscriber ref_sub = n.subscribe("q_ref_sync", 100, bagRecorder::refCallback);
-    ros::ServiceServer toggle_server = n.advertiseService<experiment_srvs::Trigger::Request, experiment_srvs::Trigger::Response>("toggle_trigger", boost::bind(bagRecorder::toggleCallback, _1, _2, bag_file));
+    ros::ServiceServer toggle_server = n.advertiseService<experiment_srvs::Trigger::Request, experiment_srvs::Trigger::Response>("toggle_recorder", boost::bind(bagRecorder::toggleCallback, _1, _2, bag_file));
 
     while(ros::ok())
     {

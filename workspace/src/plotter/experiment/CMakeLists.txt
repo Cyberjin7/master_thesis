@@ -200,6 +200,7 @@ catkin_install_python(PROGRAMS
   scripts/sine_pub.py
   scripts/sine_pub2.py
   scripts/q_pub.py
+  scripts/traj_write.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

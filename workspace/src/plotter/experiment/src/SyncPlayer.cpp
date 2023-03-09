@@ -4,7 +4,8 @@ SyncPlayer::SyncPlayer(ros::NodeHandle handler, int time_delay)
 {
     this->q_pub = handler.advertise<custom_ros_msgs::CustomData>("q_sync", 100);
     this->q_ref_pub = handler.advertise<custom_ros_msgs::CustomData>("q_ref_sync", 100);
-    this->toggle_client = handler.serviceClient<experiment_srvs::Trigger>("toggle_trigger");
+    this->toggle_mass = handler.serviceClient<experiment_srvs::Trigger>("toggle_mass");
+    this->toggle_recorder = handler.serviceClient<experiment_srvs::Trigger>("toggle_recorder");
     this->play = false;
     this->delay = time_delay;
     this->node_start_time = ros::Time::now();
@@ -59,7 +60,8 @@ void SyncPlayer::playToggle()
     start_trigger.request.trigger.data = this->play;
     start_trigger.request.header.stamp = this->sync_time;
 
-    this->toggle_client.call(start_trigger);
+    this->toggle_mass.call(start_trigger);
+    this->toggle_recorder.call(start_trigger);
 }
 
 void SyncPlayer::loadBag(std::string bag_path)

@@ -39,7 +39,7 @@ MassChanger::MassChanger(ros::NodeHandle handle)
     this->mass_client = handle.serviceClient<experiment_srvs::MassChange>("change_mass");
     this->mass_iterator = 0;
 
-    this->toggle_server = handle.advertiseService("toggle_trigger", &MassChanger::toggleCallback, this);
+    this->toggle_server = handle.advertiseService("toggle_mass", &MassChanger::toggleCallback, this);
     this->sync_sub = handle.subscribe("q_sync", 100, &MassChanger::syncCallback, this);
 
 }

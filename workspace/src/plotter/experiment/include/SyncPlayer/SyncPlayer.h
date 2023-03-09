@@ -30,7 +30,8 @@ public:
     custom_ros_msgs::CustomData sync_msg;
     std_msgs::Float64::ConstPtr q;
     ros::Subscriber q_sub;
-    ros::ServiceClient toggle_client;
+    ros::ServiceClient toggle_mass;
+    ros::ServiceClient toggle_recorder;
     // ros::ServiceServer start_service;
 
     SyncPlayer(ros::NodeHandle handler, int time_delay);

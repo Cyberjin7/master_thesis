@@ -26,7 +26,7 @@ void checkRange(double& q1, double& qd1, double& qdd1) {
 bool change_mass(experiment_srvs::MassChange::Request &req, experiment_srvs::MassChange::Response &res, double *mass)
 {
     *mass = req.mass.data;
-    ROS_INFO_STREAM("Received mass: " << mass);
+    ROS_INFO_STREAM("Received mass: " << *mass);
     return true;
 }
 
@@ -226,8 +226,8 @@ int main(int argc, char** argv)
             // Ws = forceControl.downFilterreading[9] - down_cal.interp_force(q1*180/3.14159265359);
             Ws_down = forceControl.downFilterreading[9] - down_cal.interp_force(q1*180/3.14159265359);
             Ws_up = forceControl.upFilterreading[9] - up_cal.interp_force(q1*180/3.14159265359);
-            ROS_INFO_STREAM("Calibrated Ws_down: " << -Ws_down);
-            ROS_INFO_STREAM("Calibrated Ws_up: " << -Ws_up);
+            // ROS_INFO_STREAM("Calibrated Ws_down: " << -Ws_down);
+            // ROS_INFO_STREAM("Calibrated Ws_up: " << -Ws_up);
             std_msgs::Float64 cal_force;
             cal_force.data = -Ws_down;
             cal_pub.publish(cal_force);
@@ -255,6 +255,7 @@ int main(int argc, char** argv)
             msg.data = q1 * 180 / 3.14159265359;
             // ROS_INFO_STREAM("q: " << msg.data);
             exo_pub.publish(msg);
+            ROS_INFO_STREAM("m3: " << m3);
         }
         
         

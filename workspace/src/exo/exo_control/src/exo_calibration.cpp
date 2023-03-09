@@ -67,7 +67,7 @@ namespace ExoControllers{
     }
 
     double Calibration::interp_force(double q){
-        ROS_INFO_STREAM("q: " << q);
+        // ROS_INFO_STREAM("q: " << q);
         int i;
         for (i = 0; i < this->cal_angles.size(); ++i)
         {

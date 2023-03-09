@@ -1,5 +1,5 @@
 <launch>
-    <arg name="BAG" default="$(find experiment)/launch/bag/2023-01-25-17-31-54.bag"/>
+    <arg name="BAG" default="$(find experiment)/launch/bag/trajectory.bag"/>
     <arg name="DELAY" default="2"/>
     <node pkg="experiment" type="experiment_sync_test" name="sync_player" output="screen"> 
         <param  name="bag_path" value="$(arg BAG)" type="str"/> <!--Adapt value for different input structure-->
