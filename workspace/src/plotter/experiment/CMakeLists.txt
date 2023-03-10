@@ -134,6 +134,7 @@ target_link_libraries(MassChanger ${catkin_LIBRARIES})
 
 add_library(SyncPlayer
   src/SyncPlayer.cpp
+  src/TrajGen.cpp
 )
 target_link_libraries(SyncPlayer ${catkin_LIBRARIES})
 
@@ -145,10 +146,9 @@ target_link_libraries(SyncPlayer ${catkin_LIBRARIES})
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME}_sync_player src/sync_player.cpp)
-add_executable(${PROJECT_NAME}_player_trigger src/player_starter.cpp)
-add_executable(${PROJECT_NAME}_mass_changer src/mass_changer.cpp)
-add_executable(${PROJECT_NAME}_sync_test src/Applications/sync_test.cpp)
+add_executable(${PROJECT_NAME}_player_trigger src/Applications/player_starter.cpp)
+add_executable(${PROJECT_NAME}_mass_changer src/Applications/mass_changer.cpp)
+add_executable(${PROJECT_NAME}_sync_player src/Applications/sync_player.cpp)
 add_executable(${PROJECT_NAME}_recorder src/Applications/bag_recorder.cpp)
 
 ## Rename C++ executable without prefix
@@ -159,17 +159,12 @@ add_executable(${PROJECT_NAME}_recorder src/Applications/bag_recorder.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(${PROJECT_NAME}_sync_player ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(${PROJECT_NAME}_player_trigger ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(${PROJECT_NAME}_mass_changer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(${PROJECT_NAME}_sync_test ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME}_sync_player ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(${PROJECT_NAME}_recorder ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(${PROJECT_NAME}_sync_player
-  ${catkin_LIBRARIES}
-  SyncPlayer
-)
 target_link_libraries(${PROJECT_NAME}_player_trigger
   ${catkin_LIBRARIES}
 )
@@ -177,7 +172,7 @@ target_link_libraries(${PROJECT_NAME}_mass_changer
   ${catkin_LIBRARIES}
   MassChanger
 )
-target_link_libraries(${PROJECT_NAME}_sync_test
+target_link_libraries(${PROJECT_NAME}_sync_player
   ${catkin_LIBRARIES}
   SyncPlayer
   MassChanger

@@ -1,7 +1,7 @@
 <launch>
-    <arg name="BAG" default="$(find experiment)/launch/bag/trajectory.bag"/>
+    <arg name="BAG" default="$(find experiment)/launch/bag/trajectory60.bag"/>
     <arg name="DELAY" default="2"/>
-    <node pkg="experiment" type="experiment_sync_test" name="sync_player" output="screen"> 
+    <node pkg="experiment" type="experiment_sync_player" name="sync_player" output="screen"> 
         <param  name="bag_path" value="$(arg BAG)" type="str"/> <!--Adapt value for different input structure-->
         <param  name="delay" value="$(arg DELAY)" type="int"/>
         <rosparam command="load" file="$(find experiment)/launch/config/exp_param.yaml"/>

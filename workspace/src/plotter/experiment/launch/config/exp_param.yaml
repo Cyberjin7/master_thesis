@@ -1,6 +1,25 @@
+trajectory: "BAG" # "GEN"
+mode: "TRIAL" # "TIME"
+gen:
+  {
+    up: 10.0,
+    down: 10.0,
+    min: 30,
+    max: 80
+  }
 time:
   {
-    min_length: 5,
-    max_length: 10
+    min_length: 15,
+    max_length: 20,
+  }
+trial:
+  {
+    min: 7,
+    max: 10
+  }
+amplitude:
+  {
+    min: 30,
+    max: 80
   }
 rate: 200

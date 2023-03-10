@@ -35,6 +35,9 @@ int main(int argc, char **argv)
     ROS_INFO_STREAM("Path is: " << bag_path);
     ROS_INFO_STREAM("Delay is:" << delay);
 
+    std::string traj_mode;
+    ros::param::get("~trajectory", traj_mode);
+
     std::ifstream bag_file;
     bag_file.open(bag_path);
     if(!bag_file)
@@ -43,15 +46,17 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    SyncPlayer player(n, delay);
-    player.loadBag(bag_path);
+    SyncPlayer::SyncPlayer player(n, delay, traj_mode);
+    if (traj_mode == "BAG"){
+        player.loadBag(bag_path);
+    }
 
     //MassChanger mass(n);
 
     //ros::Subscriber q_sub = n.subscribe("q", 100, &SyncPlayer::qCallback, &player);
     // ros::ServiceServer start_srv = n.advertiseService<std_srvs::Empty::Request, std_srvs::Empty::Response>("user_trigger", boost::bind(startCallback, _1, _2, &player));
     // Source: https://answers.ros.org/question/63991/how-to-make-callback-function-called-by-several-subscriber/?answer=63998#post-id-63998 
-    ros::ServiceServer start_srv = n.advertiseService("user_trigger", &SyncPlayer::toggleCallback, &player);
+    ros::ServiceServer start_srv = n.advertiseService("user_trigger", &SyncPlayer::SyncPlayer::toggleCallback, &player);
     ros::Rate loop(rate);
 
     while (ros::ok())

@@ -42,7 +42,7 @@ def bag_writer():
 
     while not rospy.is_shutdown():
         ros_time = rospy.get_rostime() - start_time
-        if (ros_time <= rospy.Duration(30)):
+        if (ros_time <= rospy.Duration(60)):
             traj.data = 55 - 45*np.cos(ros_time.to_sec())
             bag.write('traj', traj)
         else:

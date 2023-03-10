@@ -255,7 +255,7 @@ int main(int argc, char** argv)
             msg.data = q1 * 180 / 3.14159265359;
             // ROS_INFO_STREAM("q: " << msg.data);
             exo_pub.publish(msg);
-            ROS_INFO_STREAM("m3: " << m3);
+            // ROS_INFO_STREAM("m3: " << m3);
         }
         
         
