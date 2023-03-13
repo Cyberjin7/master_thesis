@@ -10,11 +10,14 @@ namespace SyncPlayer
         private:
             ros::Time start_time;
             std::map<std::string, double> gen_param;
+            bool high;
+            double traj;
         public:
-            TrajGen(std::map<std::string, double> params);
+            TrajGen();
             ~TrajGen();
-            double generate();
+            double generate(ros::Time time);
             void startGen(ros::Time time);
+            void loadParams(std::map<std::string, double> params);
     };
 
 }

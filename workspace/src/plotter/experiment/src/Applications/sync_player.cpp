@@ -38,6 +38,9 @@ int main(int argc, char **argv)
     std::string traj_mode;
     ros::param::get("~trajectory", traj_mode);
 
+    std::map<std::string, double> traj_params;
+    ros::param::get("~gen", traj_params);
+
     std::ifstream bag_file;
     bag_file.open(bag_path);
     if(!bag_file)
@@ -50,6 +53,10 @@ int main(int argc, char **argv)
     if (traj_mode == "BAG"){
         player.loadBag(bag_path);
     }
+    else if (traj_mode == "GEN")
+    {
+        player.traj_gen.loadParams(traj_params);
+    }
 
     //MassChanger mass(n);
 
@@ -61,7 +68,7 @@ int main(int argc, char **argv)
 
     while (ros::ok())
     {
-        // player.synchronize();
+        player.synchronize();
         //mass.updateTime(player.sync_time);
         
         ros::spinOnce();

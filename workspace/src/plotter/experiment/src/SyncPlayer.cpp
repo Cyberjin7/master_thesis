@@ -15,6 +15,10 @@ namespace SyncPlayer{
 
         this->trajectory_mode = traj_mode;
 
+        this->q_msg.value.data = 0.0;
+
+        this->traj_gen = TrajGen();
+
     }
 
     SyncPlayer::~SyncPlayer()
@@ -25,11 +29,11 @@ namespace SyncPlayer{
     // make this external callback? Subscriber as well?
     void SyncPlayer::qCallback(const std_msgs::Float64::ConstPtr& msg)
     {
-        this->synchronize();
-        custom_ros_msgs::CustomData sync_msg;
-        sync_msg.header.stamp = this->sync_time;
-        sync_msg.value.data = msg->data;
-        this->q_pub.publish(sync_msg);
+        // this->synchronize();
+        // custom_ros_msgs::CustomData sync_msg;
+        // sync_msg.header.stamp = this->sync_time;
+        this->q_msg.value.data = msg->data;
+        // this->q_pub.publish(sync_msg);
     }
 
     // Make this an external callback?
@@ -53,6 +57,7 @@ namespace SyncPlayer{
         if (!this->play)
         {
             this->play = true;
+            this->traj_gen.startGen(this->calculateTime());
         }
         else{
             this->play = false;
@@ -107,7 +112,7 @@ namespace SyncPlayer{
                 this->q = (*(this->view_it)).instantiate<std_msgs::Float64>();
                 if (this->q!= nullptr)
                 {
-                    this->sync_msg.value.data = this->q->data;
+                    this->ref_msg.value.data = this->q->data;
                 }
                 ++view_it;
                 ++bag_it;
@@ -118,14 +123,14 @@ namespace SyncPlayer{
                 //this->play = false;
                 playToggle();
                 ROS_WARN_STREAM("Finished playing trajectory!");
-                this->sync_msg.value.data = 0;
+                this->ref_msg.value.data = 0;
             }
     }
 
     void SyncPlayer::synchronize()
     {
         this->sync_time = this->calculateTime();
-        this->sync_msg.header.stamp = this->calculateFuture();
+        this->ref_msg.header.stamp = this->calculateFuture();
         if(this->play)
         {
             if (this->trajectory_mode == "BAG")
@@ -134,14 +139,18 @@ namespace SyncPlayer{
             }
             else if (this->trajectory_mode == "GEN")
             {
-                
+                this->ref_msg.value.data = this->traj_gen.generate(this->sync_time);
             }
         }
         else
         {
-            this->sync_msg.value.data = 0;
+            this->ref_msg.value.data = 0;
         }
-        this->q_ref_pub.publish(this->sync_msg);
+
+        this->q_msg.header.stamp = this->sync_time;
+
+        this->q_ref_pub.publish(this->ref_msg);
+        this->q_pub.publish(this->q_msg);
     }
 
 }
