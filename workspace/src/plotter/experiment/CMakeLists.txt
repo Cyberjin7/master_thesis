@@ -131,12 +131,20 @@ add_library(MassChanger
   src/MassChanger.cpp
 )
 target_link_libraries(MassChanger ${catkin_LIBRARIES})
+add_dependencies(MassChanger
+  ${custom_ros_msgs_EXPORTED_TARGETS} 
+  # ${catkin_EXPORTED_TARGETS}
+)
 
 add_library(SyncPlayer
   src/SyncPlayer.cpp
   src/TrajGen.cpp
 )
 target_link_libraries(SyncPlayer ${catkin_LIBRARIES})
+add_dependencies(SyncPlayer
+  ${custom_ros_msgs_EXPORTED_TARGETS} 
+  # ${catkin_EXPORTED_TARGETS}
+)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries

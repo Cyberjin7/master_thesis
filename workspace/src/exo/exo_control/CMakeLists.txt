@@ -145,6 +145,8 @@ set(APP_TARGETS
 foreach(target ${APP_TARGETS})
   add_executable(${target} src/Applications/main_${target}.cpp)
 
+  add_dependencies(${target} ${${target}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
   target_link_libraries(${target}
       ExoControllers
       ${catkin_LIBRARIES}
