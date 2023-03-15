@@ -3,6 +3,7 @@
 #include <random>
 #include <chrono>
 #include "experiment_srvs/MassChange.h"
+#include "custom_ros_msgs/ExperimentData.h"
 
 MassChanger::MassChanger(ros::NodeHandle handle)
 {
@@ -12,6 +13,8 @@ MassChanger::MassChanger(ros::NodeHandle handle)
     ros::param::get("~time", this->time_limits);
     ros::param::get("~mode", this->change_mode);
     ros::param::get("~trial", this->trial_params);
+
+    ros::param::get("~trajectory", this->traj_mode);
 
 
     this->start_time = ros::Time(0);
@@ -41,9 +44,10 @@ MassChanger::MassChanger(ros::NodeHandle handle)
         for (int i = 0; i < this->mass_order.size(); ++i)
         {
             ROS_INFO_STREAM("Mass: " << this->mass_order[i]);
-            int trials = uniform_dist(rng);
-            ROS_INFO_STREAM("Number of trials: " << trials);
-            this->mass_time.push_back(this->trial_params["length"] * trials);
+            int trial = uniform_dist(rng);
+            ROS_INFO_STREAM("Number of trials: " << trial);
+            this->trials.push_back(trial);
+            this->mass_time.push_back(this->trial_params["length"] * trial);
             ROS_INFO_STREAM("Duration: " << this->mass_time[i]);
         }
     }
@@ -53,6 +57,12 @@ MassChanger::MassChanger(ros::NodeHandle handle)
 
     this->toggle_server = handle.advertiseService("toggle_mass", &MassChanger::toggleCallback, this);
     this->sync_sub = handle.subscribe("q_sync", 100, &MassChanger::syncCallback, this);
+
+    if (this->traj_mode != "BAG"){
+        this->toggle_recorder = handle.serviceClient<experiment_srvs::Trigger>("toggle_recorder");
+    }
+
+    this->exp_pub = this->handler.advertise<custom_ros_msgs::ExperimentData>("exp", 1);
 
 }
 
@@ -79,12 +89,34 @@ bool MassChanger::toggleCallback(experiment_srvs::Trigger::Request &req, experim
     // this->start_time = req.header.stamp;
     this->start = req.trigger.data;
     ROS_INFO_STREAM("Toggle received: " << this->start);
+
+    if (this->traj_mode != "BAG"){
+        experiment_srvs::Trigger record_trigger;
+        record_trigger.request.trigger.data = this->start;
+        record_trigger.request.header.stamp = this->current_time;
+        this->toggle_recorder.call(record_trigger);
+    }
+
     if (this->start)
-    {
+    {   
+        this->sendExperimentData();
         this->start_time = req.header.stamp;
         this->changeMass();
     }
     return true;
+}
+
+void MassChanger::sendExperimentData()
+{
+    custom_ros_msgs::ExperimentData exp_data;
+    exp_data.mode = this->change_mode;
+    exp_data.trial_length = this->trial_params["length"];
+    exp_data.trials = this->trials;
+    for(auto it: this->mass_order){
+        exp_data.mass.push_back(this->mass_list[it]);
+    }
+    exp_data.header.stamp = this->current_time;
+    this->exp_pub.publish(exp_data);
 }
 
 void MassChanger::syncCallback(const custom_ros_msgs::CustomData::ConstPtr &msg)
@@ -114,7 +146,17 @@ void MassChanger::changeMass()
     this->mass_client.call(change_mass);
     ROS_INFO_STREAM("Change mass to: " << change_mass.request.mass.data);
     ROS_INFO_STREAM("For " << this->mass_time[this->mass_iterator] << " seconds");
-    ++(this->mass_iterator);
+    if (this->mass_iterator < this->mass_order.size()-1){
+        ++(this->mass_iterator);
+    }
+    else{
+        this->start = false;
+        //TODO: tell bag recorder to stop recording
+        experiment_srvs::Trigger end_trigger;
+        end_trigger.request.trigger.data = this->start;
+        end_trigger.request.header.stamp = this->current_time;
+        this->toggle_recorder.call(end_trigger);
+    }
 }
 
 void MassChanger::updateTime(ros::Time time)

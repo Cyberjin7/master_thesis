@@ -25,11 +25,13 @@ public:
     ros::NodeHandle handler;
 
     std::string change_mode;
+    std::string traj_mode;
 
     std::map<std::string, double> mass_list;
     std::map<std::string, double> trial_params;
     std::map<std::string, int> time_limits;
     std::vector<std::string> mass_order;
+    std::vector<double> trials;
 
     std::vector<int> mass_time; 
     int mass_iterator;
@@ -38,10 +40,13 @@ public:
     ros::ServiceClient mass_client;
     ros::ServiceServer toggle_server;
     experiment_srvs::MassChange mass_srv;
+    ros::ServiceClient toggle_recorder;
+    ros::Publisher exp_pub;
 
     void updateTime(ros::Time time);
 
     std::vector<std::string> randomizeOrder(std::map<std::string, double> list, std::default_random_engine rng);
+    void sendExperimentData();
 };
 
 #endif

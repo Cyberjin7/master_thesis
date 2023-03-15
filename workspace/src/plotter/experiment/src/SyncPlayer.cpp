@@ -6,7 +6,7 @@ namespace SyncPlayer{
         this->q_pub = handler.advertise<custom_ros_msgs::CustomData>("q_sync", 100);
         this->q_ref_pub = handler.advertise<custom_ros_msgs::CustomData>("q_ref_sync", 100);
         this->toggle_mass = handler.serviceClient<experiment_srvs::Trigger>("toggle_mass");
-        this->toggle_recorder = handler.serviceClient<experiment_srvs::Trigger>("toggle_recorder");
+        // this->toggle_recorder = handler.serviceClient<experiment_srvs::Trigger>("toggle_recorder");
         this->play = false;
         this->delay = time_delay;
         this->node_start_time = ros::Time::now();
@@ -18,6 +18,10 @@ namespace SyncPlayer{
         this->q_msg.value.data = 0.0;
 
         this->traj_gen = TrajGen();
+
+        if (traj_mode == "BAG"){
+            this->toggle_recorder = handler.serviceClient<experiment_srvs::Trigger>("toggle_recorder");
+        }
 
     }
 
@@ -69,7 +73,9 @@ namespace SyncPlayer{
         start_trigger.request.header.stamp = this->sync_time;
 
         this->toggle_mass.call(start_trigger);
-        this->toggle_recorder.call(start_trigger);
+        if (this->trajectory_mode == "BAG"){
+            this->toggle_recorder.call(start_trigger);
+        }
     }
 
     void SyncPlayer::loadBag(std::string bag_path)
