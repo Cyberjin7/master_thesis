@@ -7,6 +7,8 @@
 #include "experiment_srvs/MassChange.h"
 #include "experiment_srvs/Trigger.h"
 
+#include <random>
+
 class MassChanger
 {
 private:
@@ -22,7 +24,10 @@ public:
     bool start;
     ros::NodeHandle handler;
 
+    std::string change_mode;
+
     std::map<std::string, double> mass_list;
+    std::map<std::string, double> trial_params;
     std::map<std::string, int> time_limits;
     std::vector<std::string> mass_order;
 
@@ -35,6 +40,8 @@ public:
     experiment_srvs::MassChange mass_srv;
 
     void updateTime(ros::Time time);
+
+    std::vector<std::string> randomizeOrder(std::map<std::string, double> list, std::default_random_engine rng);
 };
 
 #endif
