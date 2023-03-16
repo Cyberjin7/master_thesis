@@ -1,6 +1,8 @@
 <launch>
+<arg name="DELAY"/>
     <node pkg="experiment" type="experiment_mass_changer" name="mass_changer" output="screen">
         <rosparam command="load" file="$(find experiment)/launch/config/mass.yaml"/>
         <rosparam command="load" file="$(find experiment)/launch/config/exp_param.yaml"/>
+        <param name="delay" value="$(arg DELAY)" />
     </node>
 </launch>

@@ -15,6 +15,7 @@ MassChanger::MassChanger(ros::NodeHandle handle)
     ros::param::get("~trial", this->trial_params);
 
     ros::param::get("~trajectory", this->traj_mode);
+    ros::param::get("~delay", this->delay);
 
 
     this->start_time = ros::Time(0);
@@ -125,11 +126,19 @@ void MassChanger::syncCallback(const custom_ros_msgs::CustomData::ConstPtr &msg)
     this->updateTime(msg->header.stamp);
     if (this->start)
     {
-        if ((this->current_time - this->start_time > ros::Duration(this->mass_time[this->mass_iterator-1])) 
-                                                        && (this->mass_iterator < this->mass_order.size()))
+        if (this->current_time - this->start_time > this->wait_time)
         {
-            this->start_time = this->current_time;
-            this->changeMass();
+            if (this->mass_iterator < this->mass_order.size()){
+                this->start_time = this->current_time;
+                this->changeMass();
+            }
+            else{
+                this->start = false;
+                experiment_srvs::Trigger end_trigger;
+                end_trigger.request.trigger.data = this->start;
+                end_trigger.request.header.stamp = this->current_time;
+                this->toggle_recorder.call(end_trigger);
+            }
         }
     }
     else
@@ -145,18 +154,16 @@ void MassChanger::changeMass()
     change_mass.request.mass.data = this->mass_list[this->mass_order[this->mass_iterator]];
     this->mass_client.call(change_mass);
     ROS_INFO_STREAM("Change mass to: " << change_mass.request.mass.data);
-    ROS_INFO_STREAM("For " << this->mass_time[this->mass_iterator] << " seconds");
-    if (this->mass_iterator < this->mass_order.size()-1){
-        ++(this->mass_iterator);
+
+    if(this->mass_iterator == 0){
+        this->wait_time = ros::Duration(this->mass_time[this->mass_iterator] + this->delay);
     }
     else{
-        this->start = false;
-        //TODO: tell bag recorder to stop recording
-        experiment_srvs::Trigger end_trigger;
-        end_trigger.request.trigger.data = this->start;
-        end_trigger.request.header.stamp = this->current_time;
-        this->toggle_recorder.call(end_trigger);
+        this->wait_time = ros::Duration(this->mass_time[this->mass_iterator]);
     }
+
+    ROS_INFO_STREAM("For " << this->wait_time << " seconds");
+    ++(this->mass_iterator);
 }
 
 void MassChanger::updateTime(ros::Time time)

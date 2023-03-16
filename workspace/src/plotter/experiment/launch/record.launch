@@ -1,6 +1,6 @@
 <launch>
     <arg name="DIR" default="$(find experiment)/launch/bag"/>
-    <arg name="SUBJECT" default="jin_test_new"/>
+    <arg name="SUBJECT" default="jin_square"/>
     <node pkg="experiment" type="experiment_recorder" name="bag_recorder" output="screen"> 
         <param  name="save_dir" value="$(arg DIR)" type="str"/>
         <param  name="subject" value="$(arg SUBJECT)" type="str"/>

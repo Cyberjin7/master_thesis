@@ -6,6 +6,7 @@ namespace SyncPlayer
     {
         // gen_param = params;
         high = false;
+        peak = false;
     }
 
     TrajGen::~TrajGen(){}
@@ -18,30 +19,55 @@ namespace SyncPlayer
     void TrajGen::startGen(ros::Time time)
     {
         start_time = time;
+        traj = gen_param["min"];
     }
 
     double TrajGen::generate(ros::Time time)
     {
-        if(high){
-            if(time - start_time < ros::Duration(gen_param["up"])){
-                traj = gen_param["max"];
-            }
-            else{
+        // if(high){
+        //     if(time - start_time < ros::Duration(gen_param["up"])){
+        //         traj = gen_param["max"];
+        //     }
+        //     else{
+        //         high = false;
+        //         start_time = time;
+        //         traj = gen_param["min"];
+        //     }
+        // }
+        // else{
+        //     if(time - start_time < ros::Duration(gen_param["down"]/2)){
+        //         traj = gen_param["min"];
+        //     }
+        //     else{
+        //         if (!peak){
+        //             high = true;
+        //             traj = gen_param["max"];
+        //             peak = true;
+        //         }
+        //         else{
+        //             peak = false;
+        //         }
+        //         start_time = time;
+        //     }
+        // }
+
+        if(high && time - start_time >= ros::Duration(gen_param["up"])){
                 high = false;
-                start_time = time;
                 traj = gen_param["min"];
-            }
-        }
-        else{
-            if(time - start_time < ros::Duration(gen_param["down"])){
-                traj = gen_param["min"];
-            }
-            else{
-                high = true;
                 start_time = time;
-                traj = gen_param["max"];
             }
-        }
+            else if(!high && time-start_time >= ros::Duration(gen_param["down"]/2)){
+                if (!peak){
+                    high = true;
+                    traj = gen_param["max"];
+                    peak = true;
+                }
+                else{
+                    peak = false;
+                }
+                start_time = time;
+            }
+
         return traj;
     }
 }

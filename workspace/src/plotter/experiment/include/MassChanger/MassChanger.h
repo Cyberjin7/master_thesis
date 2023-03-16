@@ -26,6 +26,7 @@ public:
 
     std::string change_mode;
     std::string traj_mode;
+    int delay;
 
     std::map<std::string, double> mass_list;
     std::map<std::string, double> trial_params;
@@ -33,6 +34,7 @@ public:
     std::vector<std::string> mass_order;
     std::vector<double> trials;
 
+    ros::Duration wait_time;
     std::vector<int> mass_time; 
     int mass_iterator;
 

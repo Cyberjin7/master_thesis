@@ -12,6 +12,7 @@ namespace SyncPlayer
             std::map<std::string, double> gen_param;
             bool high;
             double traj;
+            double peak;
         public:
             TrajGen();
             ~TrajGen();

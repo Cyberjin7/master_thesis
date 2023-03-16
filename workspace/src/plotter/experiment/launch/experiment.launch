@@ -1,6 +1,11 @@
 <launch>
     <arg name="RECORD" default="false"/>
-    <include file="$(find experiment)/launch/player.launch"/>
-    <include file="$(find experiment)/launch/mass_changer.launch"/>
+    <arg name="DELAY" default="5"/>
+    <include file="$(find experiment)/launch/player.launch">
+        <arg name="DELAY" value="$(arg DELAY)"/>
+    </include>
+    <include file="$(find experiment)/launch/mass_changer.launch">
+        <arg name="DELAY" value="$(arg DELAY)"/>
+    </include>
     <include file="$(find experiment)/launch/record.launch" if="$(arg RECORD)"/>
 </launch>
