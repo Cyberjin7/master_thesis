@@ -171,11 +171,14 @@ int main(int argc, char** argv)
     ros::Subscriber sub_fUp = n.subscribe("patch5", 1000, &ExoControllers::ForceControl::fUpCallback, &forceControl); // patch5: upper inner
     // ros::Subscriber sub_fLow = n.subscribe("patch4", 1000, &ExoControllers::ForceControl::pUpCallback, &forceControl); // patch4: upper outer
 
-    ros::Publisher cal_pub = n.advertise<std_msgs::Float64>("cal_force", 100);
+    // ros::Publisher cal_pub = n.advertise<std_msgs::Float64>("cal_force", 100);
+    ros::Publisher torque_pub = n.advertise<std_msgs::Float64>("torque", 100);
 
 
     ros::ServiceServer mass_serv = n.advertiseService<experiment_srvs::MassChange::Request,experiment_srvs::MassChange::Response>("change_mass", boost::bind(change_mass, _1, _2, &m3));
     ros::ServiceServer cal_serv = n.advertiseService<std_srvs::Empty::Request,std_srvs::Empty::Response>("cal_trigger", boost::bind(start_cal, _1, _2, &down_cal));
+
+    std_msgs::Float64 torque_msg;
 
     while (ros::ok())
     {
@@ -228,13 +231,13 @@ int main(int argc, char** argv)
             Ws_up = forceControl.upFilterreading[9] - up_cal.interp_force(q1*180/3.14159265359);
             // ROS_INFO_STREAM("Calibrated Ws_down: " << -Ws_down);
             // ROS_INFO_STREAM("Calibrated Ws_up: " << -Ws_up);
-            std_msgs::Float64 cal_force;
-            cal_force.data = -Ws_down;
-            cal_pub.publish(cal_force);
+            // std_msgs::Float64 cal_force;
+            // cal_force.data = -Ws_down;
+            // cal_pub.publish(cal_force);
             // Ws = -force_change * 20;
             // Ws=0.0;
             if(std::abs(Ws_up) > std::abs(Ws_down)){
-                Ws = -Ws_up;
+                Ws = Ws_up;
             }
             else{
                 Ws = -Ws_down;
@@ -243,6 +246,8 @@ int main(int argc, char** argv)
             // // call force control update
             tao = forceControl.update(Ws) + g_matrix;
             // ROS_WARN_STREAM("tao=" << tao);
+            torque_msg.data = tao;
+            torque_pub.publish(torque_msg);
 
             // calculate qdd1 and integrate
             qdd1 = (tao - b_matrix * qd1 - c_matrix * qd1 - g_matrix) / m_matrix;

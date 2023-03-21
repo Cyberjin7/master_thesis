@@ -28,6 +28,14 @@ namespace ExoControllers{
             double m_prox_lower;
             double m_f_upper;
             double m_f_lower;
+            double delta_t;
+            double m_ki_up;
+            double m_ki_down;
+            double m_kd_up;
+            double m_kd_down;
+            double m_e;
+            double m_prev_e;
+            double m_e_int;
             // pthread_mutex_t count_mutex;
             ros::Publisher cell6;
             ros::Publisher cell7;

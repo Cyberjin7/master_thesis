@@ -16,6 +16,15 @@ namespace ExoControllers{
         ROS_WARN_STREAM("force m_kp_up: \n"<<m_kp_up);
         ROS_WARN_STREAM("force m_kp_down: \n"<<m_kp_down);
 
+        ros::param::get("~force_ctrl/kd_up", m_kd_up);
+        ros::param::get("~force_ctrl/kd_down", m_kd_down);
+        double rate;
+        ros::param::get("~rate", rate);
+        delta_t = 1/rate;
+        m_e = 0.0;
+        m_prev_e = 0.0;
+        m_e_int = 0.0;
+
         m_L2 = L2;
         m_startFlag = false;
         m_tao = 0;
@@ -52,13 +61,26 @@ namespace ExoControllers{
         {
             m_startFlag = true;
         }
+        m_prev_e = m_e;
+        m_e = Ws - m_W_des;
 
+
+        double e_d = (m_e - m_prev_e) / delta_t;
+        m_e_int = m_e_int + delta_t*(m_e + m_prev_e)/2;
+
+        // if (Ws >= 0)
+        // {
+        //     m_tao = m_L2*m_kp_up*(Ws - m_W_des);
+        // }
+        // else{
+        //     m_tao = m_L2*m_kp_down*(Ws - m_W_des);
+        // }
         if (Ws >= 0)
         {
-            m_tao = m_L2*m_kp_up*(Ws - m_W_des);
+            m_tao = m_L2*(m_kp_up*m_e + m_kd_up*e_d + m_ki_up*m_e_int);
         }
         else{
-            m_tao = m_L2*m_kp_down*(Ws - m_W_des);
+            m_tao = m_L2*(m_kp_down*m_e + m_kd_down*e_d + m_ki_down*m_e_int);
         }
 
         // m_tao = m_L2*m_kp*(Ws - m_W_des); // Update for new model
