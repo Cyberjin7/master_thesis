@@ -50,14 +50,16 @@ namespace ExoControllers{
                     if(this->intv_iter != this->cal_angles.size()){
                         ROS_INFO_STREAM("Next angle: " << this->cal_angles[this->intv_iter]);
                     }
+                    else{
+                        ROS_INFO_STREAM("Calibration finished");
+                        this->start = false;
+                        this->intv_iter = 0;
+                    }
                     t = ros::Time::now();
-                }
-                else{
-                    ROS_INFO_STREAM("Calibration finished");
-                    this->start = false;
                 }
                 this->record = false;
                 this->temp_vals.clear();
+
             }
             else{
                 this->temp_vals.push_back(force);
