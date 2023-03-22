@@ -173,12 +173,21 @@ int main(int argc, char** argv)
 
     // ros::Publisher cal_pub = n.advertise<std_msgs::Float64>("cal_force", 100);
     ros::Publisher torque_pub = n.advertise<std_msgs::Float64>("torque", 100);
+    ros::Publisher delta_tau_pub = n.advertise<std_msgs::Float64>("delta_tau", 100);
+    ros::Publisher up_pub = n.advertise<std_msgs::Float64>("up", 100);
+    ros::Publisher down_pub = n.advertise<std_msgs::Float64>("down", 100);
 
 
     ros::ServiceServer mass_serv = n.advertiseService<experiment_srvs::MassChange::Request,experiment_srvs::MassChange::Response>("change_mass", boost::bind(change_mass, _1, _2, &m3));
     ros::ServiceServer cal_serv = n.advertiseService<std_srvs::Empty::Request,std_srvs::Empty::Response>("cal_trigger", boost::bind(start_cal, _1, _2, &down_cal));
 
     std_msgs::Float64 torque_msg;
+    std_msgs::Float64 delta_tau_msg;
+    std_msgs::Float64 up_msg;
+    std_msgs::Float64 down_msg;
+
+    double prev_torque = 0;
+    double prev_q = 0;
 
     while (ros::ok())
     {
@@ -229,6 +238,18 @@ int main(int argc, char** argv)
             // Ws = forceControl.downFilterreading[9] - down_cal.interp_force(q1*180/3.14159265359);
             Ws_down = forceControl.downFilterreading[9] - down_cal.interp_force(q1*180/3.14159265359);
             Ws_up = forceControl.upFilterreading[9] - up_cal.interp_force(q1*180/3.14159265359);
+
+            if(Ws_down < 0){
+                Ws_down = 0.0;
+            }
+            if(Ws_up < 0){
+                Ws_up = 0.0;
+            }
+
+            up_msg.data = Ws_up;
+            down_msg.data = Ws_down;
+            up_pub.publish(up_msg);
+            down_pub.publish(down_msg);
             // ROS_INFO_STREAM("Calibrated Ws_down: " << -Ws_down);
             // ROS_INFO_STREAM("Calibrated Ws_up: " << -Ws_up);
             // std_msgs::Float64 cal_force;
@@ -244,15 +265,27 @@ int main(int argc, char** argv)
             }
 
             // // call force control update
+            prev_torque = tao;
             tao = forceControl.update(Ws) + g_matrix;
             // ROS_WARN_STREAM("tao=" << tao);
-            torque_msg.data = tao;
+            // if(std::abs(tao - prev_torque) > 0.1){
+            //     tao = prev_torque;
+            // }
+            torque_msg.data = tao - g_matrix;
             torque_pub.publish(torque_msg);
 
+            delta_tau_msg.data = tao - prev_torque;
+            delta_tau_pub.publish(delta_tau_msg);
+
+            prev_q = q1;
             // calculate qdd1 and integrate
             qdd1 = (tao - b_matrix * qd1 - c_matrix * qd1 - g_matrix) / m_matrix;
             qd1 = delta_t * qdd1 + qd1;
             q1 = delta_t * qd1 + q1;
+
+            // if (std::abs(q1 - prev_q) < deg2rad(0.01)){
+            //     q1 = prev_q;
+            // }
             
             checkRange(q1, qd1, qdd1);
 
