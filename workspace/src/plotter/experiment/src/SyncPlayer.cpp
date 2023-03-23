@@ -5,6 +5,9 @@ namespace SyncPlayer{
     {
         this->q_pub = handler.advertise<sync_msgs::CustomData>("q_sync", 100);
         this->q_ref_pub = handler.advertise<sync_msgs::CustomData>("q_ref_sync", 100);
+
+        this->sync_state_pub = handler.advertise<sync_msgs::SyncQ>("state_sync", 100);
+
         this->toggle_mass = handler.serviceClient<experiment_srvs::Trigger>("toggle_mass");
         // this->toggle_recorder = handler.serviceClient<experiment_srvs::Trigger>("toggle_recorder");
         this->play = false;
@@ -12,6 +15,7 @@ namespace SyncPlayer{
         this->node_start_time = ros::Time::now();
         this->time_diff = ros::Duration(0);
         this->q_sub = handler.subscribe("q", 100, &SyncPlayer::qCallback, this);
+        this->state_sub = handler.subscribe("state", 100, &SyncPlayer::stateCallback, this);
 
         this->trajectory_mode = traj_mode;
 
@@ -38,6 +42,11 @@ namespace SyncPlayer{
         // sync_msg.header.stamp = this->sync_time;
         this->q_msg.value.data = msg->data;
         // this->q_pub.publish(sync_msg);
+    }
+
+    void SyncPlayer::stateCallback(const exo_msgs::state::ConstPtr& msg)
+    {
+        this->state_msg.state = *msg;
     }
 
     // Make this an external callback?
@@ -154,9 +163,11 @@ namespace SyncPlayer{
         }
 
         this->q_msg.header.stamp = this->sync_time;
+        this->state_msg.Header.stamp = this->sync_time;
 
         this->q_ref_pub.publish(this->ref_msg);
         this->q_pub.publish(this->q_msg);
+        this->sync_state_pub.publish(this->state_msg);
     }
 
 }

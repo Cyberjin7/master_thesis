@@ -7,6 +7,7 @@
 #include "experiment_srvs/MassChange.h"
 #include "std_srvs/Empty.h"
 #include "exo_msgs/q.h"
+#include "exo_msgs/state.h"
 
 // #include <pthread.h>
 
@@ -46,6 +47,7 @@ int main(int argc, char** argv)
     ros::Publisher exo_pub = n.advertise<std_msgs::Float64>("/q_control_publisher", 10);
     // ros::Publisher pub_q_state = n.advertise<exo_control::q>("/q_state", 1);
     ros::Publisher pub_q_state = n.advertise<exo_msgs::q>("/q_state", 100);
+    ros::Publisher state_pub = n.advertise<exo_msgs::state>("state", 100);
     // ros::Publisher pub_q_state = n.advertise<std_msgs::Float64>("/q_state", 1);
     // ros::Publisher pub_q_state = n.advertise<std_msgs::Float64>("q", 100);
     // ros::Publisher pub_q_des = n.advertise<exo_control::q>("/q_des", 1);
@@ -60,6 +62,7 @@ int main(int argc, char** argv)
     exo_control::q q_des;
 
     exo_msgs::q q_state;
+    exo_msgs::state state;
 
     double delta_t = 1 / (double)f;
 
@@ -312,6 +315,14 @@ int main(int argc, char** argv)
         q_state.qd = qd1 * 180 / 3.14159265359;
         q_state.qdd = qdd1 * 180 / 3.14159265359;
         pub_q_state.publish(q_state);
+
+        state.q_state.q = q1 * 180 / 3.14159265359;
+        state.q_state.qd = qd1 * 180 / 3.14159265359;
+        state.q_state.qdd = qdd1 * 180 / 3.14159265359;
+        state.tau = tao - g_matrix;
+        state.force_down = Ws_down;
+        state.force_up = Ws_up;
+        state_pub.publish(state);
         
         // q_des.q = posControl.get_m_q_des() * 180 / 3.14159265359;
         // q_des.qd = posControl.get_m_qd_des() * 180 / 3.14159265359;
