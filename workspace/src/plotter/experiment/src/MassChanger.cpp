@@ -3,7 +3,7 @@
 #include <random>
 #include <chrono>
 #include "experiment_srvs/MassChange.h"
-#include "custom_ros_msgs/ExperimentData.h"
+#include "sync_msgs/ExperimentData.h"
 
 MassChanger::MassChanger(ros::NodeHandle handle)
 {
@@ -63,7 +63,7 @@ MassChanger::MassChanger(ros::NodeHandle handle)
         this->toggle_recorder = handle.serviceClient<experiment_srvs::Trigger>("toggle_recorder");
     }
 
-    this->exp_pub = this->handler.advertise<custom_ros_msgs::ExperimentData>("exp", 1);
+    this->exp_pub = this->handler.advertise<sync_msgs::ExperimentData>("exp", 1);
 
 }
 
@@ -109,7 +109,7 @@ bool MassChanger::toggleCallback(experiment_srvs::Trigger::Request &req, experim
 
 void MassChanger::sendExperimentData()
 {
-    custom_ros_msgs::ExperimentData exp_data;
+    sync_msgs::ExperimentData exp_data;
     exp_data.mode = this->change_mode;
     exp_data.trial_length = this->trial_params["length"];
     exp_data.trials = this->trials;
@@ -120,7 +120,7 @@ void MassChanger::sendExperimentData()
     this->exp_pub.publish(exp_data);
 }
 
-void MassChanger::syncCallback(const custom_ros_msgs::CustomData::ConstPtr &msg)
+void MassChanger::syncCallback(const sync_msgs::CustomData::ConstPtr &msg)
 {
     // this->current_time = msg->header.stamp;
     this->updateTime(msg->header.stamp);

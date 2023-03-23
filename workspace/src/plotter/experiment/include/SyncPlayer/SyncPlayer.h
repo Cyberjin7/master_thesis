@@ -4,7 +4,7 @@
 #include "ros/ros.h"
 #include "std_msgs/Float64.h"
 #include "std_srvs/Empty.h"
-#include "custom_ros_msgs/CustomData.h"
+#include "sync_msgs/CustomData.h"
 #include "experiment_srvs/Trigger.h"
 #include "rosbag/bag.h"
 #include "rosbag/view.h"
@@ -19,7 +19,7 @@ namespace SyncPlayer
         // rosbag::Bag bag;
         // rosbag::View traj_view;
         std::string trajectory_mode;
-        custom_ros_msgs::CustomData q_msg;
+        sync_msgs::CustomData q_msg;
     public:
         ros::Publisher q_pub; // change to sync_pub
         ros::Publisher q_ref_pub; // change to sync_bag_pub
@@ -33,7 +33,7 @@ namespace SyncPlayer
         rosbag::View traj_view;
         rosbag::View::iterator view_it;
         uint32_t bag_it;
-        custom_ros_msgs::CustomData ref_msg;
+        sync_msgs::CustomData ref_msg;
         std_msgs::Float64::ConstPtr q;
         ros::Subscriber q_sub;
         ros::ServiceClient toggle_mass;

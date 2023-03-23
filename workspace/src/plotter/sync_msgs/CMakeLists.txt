@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(custom_ros_msgs)
+project(sync_msgs)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -53,6 +53,7 @@ add_message_files(
   FILES
   CustomData.msg
   ExperimentData.msg
+  SyncQ.msg
 )
 
 ## Generate services in the 'srv' folder

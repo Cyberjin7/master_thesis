@@ -11,7 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   std_srvs
-  custom_ros_msgs
+  sync_msgs
   rosbag
 )
 
@@ -108,7 +108,7 @@ catkin_package(
  INCLUDE_DIRS include
  LIBRARIES MassChanger SyncPlayer# experiment
  LIBRARIES MassChanger SyncPlayer
- CATKIN_DEPENDS rospy std_msgs custom_ros_msgs std_srvs
+ CATKIN_DEPENDS rospy std_msgs sync_msgs std_srvs
 #  DEPENDS system_lib
 )
 
@@ -132,7 +132,7 @@ add_library(MassChanger
 )
 target_link_libraries(MassChanger ${catkin_LIBRARIES})
 add_dependencies(MassChanger
-  ${custom_ros_msgs_EXPORTED_TARGETS} 
+  ${sync_msgs_EXPORTED_TARGETS} 
   # ${catkin_EXPORTED_TARGETS}
 )
 
@@ -142,7 +142,7 @@ add_library(SyncPlayer
 )
 target_link_libraries(SyncPlayer ${catkin_LIBRARIES})
 add_dependencies(SyncPlayer
-  ${custom_ros_msgs_EXPORTED_TARGETS} 
+  ${sync_msgs_EXPORTED_TARGETS} 
   # ${catkin_EXPORTED_TARGETS}
 )
 

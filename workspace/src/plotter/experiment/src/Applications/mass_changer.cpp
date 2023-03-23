@@ -1,5 +1,5 @@
 #include "ros/ros.h"
-#include "custom_ros_msgs/CustomData.h"
+#include "sync_msgs/CustomData.h"
 #include "std_srvs/Empty.h"
 #include "experiment_srvs/MassChange.h"
 #include "MassChanger/MassChanger.h"
@@ -10,7 +10,7 @@ bool testCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res,
     return true;
 }
 
-void callback(const custom_ros_msgs::CustomData::ConstPtr &msg, MassChanger& mass)
+void callback(const sync_msgs::CustomData::ConstPtr &msg, MassChanger& mass)
 {
     ROS_INFO_STREAM("Start?: " << mass.start);
 }

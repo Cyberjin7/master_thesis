@@ -3,7 +3,7 @@
 
 #include "ros/ros.h"
 #include "std_srvs/Empty.h"
-#include "custom_ros_msgs/CustomData.h"
+#include "sync_msgs/CustomData.h"
 #include "experiment_srvs/MassChange.h"
 #include "experiment_srvs/Trigger.h"
 
@@ -17,7 +17,7 @@ public:
     MassChanger(ros::NodeHandle handle);
     ~MassChanger();
     bool toggleCallback(experiment_srvs::Trigger::Request &req, experiment_srvs::Trigger::Response &res);
-    void syncCallback(const custom_ros_msgs::CustomData::ConstPtr &msg);
+    void syncCallback(const sync_msgs::CustomData::ConstPtr &msg);
     void changeMass();
     ros::Time start_time;
     ros::Time current_time;

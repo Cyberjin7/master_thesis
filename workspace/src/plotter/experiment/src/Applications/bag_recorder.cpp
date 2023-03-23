@@ -4,9 +4,9 @@
 #include <ros/ros.h>
 #include <rosbag/bag.h>
 
-#include "custom_ros_msgs/CustomData.h"
+#include "sync_msgs/CustomData.h"
 #include "experiment_srvs/Trigger.h"
-#include "custom_ros_msgs/ExperimentData.h"
+#include "sync_msgs/ExperimentData.h"
 
 namespace fs = std::filesystem;
 
@@ -15,7 +15,7 @@ namespace bagRecorder
     rosbag::Bag bag;
     bool record;
 
-    void qCallback(const custom_ros_msgs::CustomData::ConstPtr& msg)
+    void qCallback(const sync_msgs::CustomData::ConstPtr& msg)
     {
         if(bagRecorder::record)
         {
@@ -24,7 +24,7 @@ namespace bagRecorder
         }
     }
 
-    void refCallback(const custom_ros_msgs::CustomData::ConstPtr& msg)
+    void refCallback(const sync_msgs::CustomData::ConstPtr& msg)
     {
         if(bagRecorder::record)
         {
@@ -33,7 +33,7 @@ namespace bagRecorder
         }
     }
 
-    void expCallback(const custom_ros_msgs::ExperimentData::ConstPtr& msg)
+    void expCallback(const sync_msgs::ExperimentData::ConstPtr& msg)
     {
         // if(bagRecorder::record){
         //     ROS_INFO_STREAM("Writing experiment data");

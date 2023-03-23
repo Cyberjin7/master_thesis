@@ -3,8 +3,8 @@ namespace SyncPlayer{
 
     SyncPlayer::SyncPlayer(ros::NodeHandle handler, int time_delay, std::string traj_mode)
     {
-        this->q_pub = handler.advertise<custom_ros_msgs::CustomData>("q_sync", 100);
-        this->q_ref_pub = handler.advertise<custom_ros_msgs::CustomData>("q_ref_sync", 100);
+        this->q_pub = handler.advertise<sync_msgs::CustomData>("q_sync", 100);
+        this->q_ref_pub = handler.advertise<sync_msgs::CustomData>("q_ref_sync", 100);
         this->toggle_mass = handler.serviceClient<experiment_srvs::Trigger>("toggle_mass");
         // this->toggle_recorder = handler.serviceClient<experiment_srvs::Trigger>("toggle_recorder");
         this->play = false;
