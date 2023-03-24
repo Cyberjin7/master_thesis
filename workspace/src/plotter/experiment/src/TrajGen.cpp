@@ -22,6 +22,11 @@ namespace SyncPlayer
         traj = gen_param["min"];
     }
 
+    bool TrajGen::getPeak()
+    {
+        return this->peak;
+    }
+
     double TrajGen::generate(ros::Time time)
     {
         // if(high){

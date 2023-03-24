@@ -15,8 +15,8 @@ time:
 trial:
   {
     length: 20,
-    min: 7,
-    max: 10
+    min: 5,
+    max: 7
   }
 amplitude:
   {
@@ -24,3 +24,8 @@ amplitude:
     max: 80
   }
 rate: 200
+analysis:
+  {
+    rise_threshold: 0.95,
+    settling_threshold: 0.05
+  }

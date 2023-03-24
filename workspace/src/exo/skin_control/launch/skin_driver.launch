@@ -1,5 +1,5 @@
 <launch>
     <include file="$(find tum_ics_skin_driver_events)/launch/skin_driver_ftdi.launch">
-        <arg name="FTDI_SERIAL" value="FT3800P6"/>
+        <arg name="FTDI_SERIAL" value="FT601ZA5"/>  <!-- FT3800P6 -->
     </include>
 </launch>

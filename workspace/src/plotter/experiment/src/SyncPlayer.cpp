@@ -41,12 +41,18 @@ namespace SyncPlayer{
         // custom_ros_msgs::CustomData sync_msg;
         // sync_msg.header.stamp = this->sync_time;
         this->q_msg.value.data = msg->data;
-        // this->q_pub.publish(sync_msg);
+        this->q_pub.publish(q_msg);
     }
 
     void SyncPlayer::stateCallback(const exo_msgs::state::ConstPtr& msg)
     {
-        this->state_msg.state = *msg;
+        // this->state_msg.state = *msg;
+        this->state_msg.state.q_state.q = msg->q_state.q;
+        this->state_msg.state.q_state.qd = msg->q_state.qd;
+        this->state_msg.state.q_state.qdd = msg->q_state.qdd;
+        this->state_msg.state.tau = msg->tau;
+        this->state_msg.state.force_up = msg->force_up;
+        this->state_msg.state.force_down = msg->force_down;
     }
 
     // Make this an external callback?
@@ -155,6 +161,7 @@ namespace SyncPlayer{
             else if (this->trajectory_mode == "GEN")
             {
                 this->ref_msg.value.data = this->traj_gen.generate(this->sync_time);
+                this->state_msg.high = this->traj_gen.getPeak();
             }
         }
         else
@@ -163,7 +170,7 @@ namespace SyncPlayer{
         }
 
         this->q_msg.header.stamp = this->sync_time;
-        this->state_msg.Header.stamp = this->sync_time;
+        this->state_msg.header.stamp = this->sync_time;
 
         this->q_ref_pub.publish(this->ref_msg);
         this->q_pub.publish(this->q_msg);

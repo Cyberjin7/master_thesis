@@ -1,0 +1,5 @@
+<launch>
+    <node pkg="experiment" type="experiment_analyzer" name="data_analyzer" output="screen"> 
+        <rosparam command="load" file="$(find experiment)/launch/config/exp_param.yaml"/>
+    </node>
+</launch>

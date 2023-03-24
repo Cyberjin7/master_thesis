@@ -19,6 +19,7 @@ namespace SyncPlayer
             double generate(ros::Time time);
             void startGen(ros::Time time);
             void loadParams(std::map<std::string, double> params);
+            bool getPeak();
     };
 
 }

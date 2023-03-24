@@ -195,6 +195,7 @@ int main(int argc, char** argv)
 
     double prev_torque = 0;
     double prev_q = 0;
+    double tmp;
 
     while (ros::ok())
     {
@@ -217,7 +218,6 @@ int main(int argc, char** argv)
         if (down_cal.get_start())
         {
             up_cal.set_start(true);
-            double tmp;
             tmp = down_cal.calibrate(forceControl.downFilterreading[9]);
             up_cal.calibrate(forceControl.upFilterreading[9]);
             std_msgs::Float64 msg;
@@ -311,7 +311,7 @@ int main(int argc, char** argv)
         // ROS_WARN_STREAM("q1=" << q1 * 180 / 3.14159265359 << " degrees");
 
         // q_state.data = q1 * 180 / 3.14159265359;
-        q_state.q = q1 * 180 / 3.14159265359;
+        q_state.q = q1 * 180 / 3.14159265359; // bug: in calibration, angles are in degs. converting is wrong but I don't care now
         q_state.qd = qd1 * 180 / 3.14159265359;
         q_state.qdd = qdd1 * 180 / 3.14159265359;
         pub_q_state.publish(q_state);

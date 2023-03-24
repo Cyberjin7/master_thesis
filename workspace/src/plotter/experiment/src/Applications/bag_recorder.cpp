@@ -7,6 +7,8 @@
 #include "sync_msgs/CustomData.h"
 #include "experiment_srvs/Trigger.h"
 #include "sync_msgs/ExperimentData.h"
+#include "sync_msgs/SyncQ.h"
+#include "sync_msgs/response.h"
 
 namespace fs = std::filesystem;
 
@@ -21,6 +23,22 @@ namespace bagRecorder
         {
             // ROS_INFO_STREAM("Writing q");
             bagRecorder::bag.write("q", msg->header.stamp, msg);
+        }
+    }
+
+    void stateCallback(const sync_msgs::SyncQ::ConstPtr& msg)
+    {
+        if(bagRecorder::record)
+        {
+            bagRecorder::bag.write("state", msg->header.stamp, msg);
+        }
+    }
+
+    void responseCallback(const sync_msgs::response::ConstPtr& msg)
+    {
+        if(bagRecorder::record)
+        {
+            bagRecorder::bag.write("response", msg->header.stamp, msg);
         }
     }
 
@@ -122,6 +140,8 @@ int main(int argc, char **argv)
     ros::ServiceServer toggle_server = n.advertiseService<experiment_srvs::Trigger::Request, experiment_srvs::Trigger::Response>("toggle_recorder", boost::bind(bagRecorder::toggleCallback, _1, _2, bag_file));
 
     ros::Subscriber exp_sub = n.subscribe("exp", 1, bagRecorder::expCallback);
+    ros::Subscriber response_sub = n.subscribe("response", 1, bagRecorder::responseCallback);
+    ros::Subscriber state_sub = n.subscribe("state_sync", 1, bagRecorder::stateCallback);
 
     bagRecorder::bag.open(bag_file, rosbag::bagmode::Write);
 
