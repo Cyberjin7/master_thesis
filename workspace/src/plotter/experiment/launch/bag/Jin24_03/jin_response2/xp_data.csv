@@ -1,0 +1,2 @@
+Time,header.seq,header.stamp.secs,header.stamp.nsecs,header.frame_id,mode,mass_0,mass_1,mass_2,trials_0,trials_1,trials_2,trial_length
+90.435877332,0,90,435877332,,TRIAL,1.0,2.0,0.0,6.0,7.0,7.0,20.0
