@@ -113,6 +113,10 @@ void MassChanger::sendExperimentData()
     exp_data.mode = this->change_mode;
     exp_data.trial_length = this->trial_params["length"];
     exp_data.trials = this->trials;
+    exp_data.delay = this->delay;
+    ros::param::get("~rate", exp_data.rate);
+    ros::param::get("~amplitude/min", exp_data.target_low);
+    ros::param::get("~amplitude/max", exp_data.target_high);
     for(auto it: this->mass_order){
         exp_data.mass.push_back(this->mass_list[it]);
     }

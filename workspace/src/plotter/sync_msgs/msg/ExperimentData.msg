@@ -3,3 +3,7 @@ string mode
 float64[] mass
 float64[] trials
 float64 trial_length
+float64 rate
+float64 delay
+float64 target_low
+float64 target_high
