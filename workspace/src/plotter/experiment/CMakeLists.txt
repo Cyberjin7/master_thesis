@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_srvs
   sync_msgs
   rosbag
+  exo_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -108,7 +109,7 @@ catkin_package(
  INCLUDE_DIRS include
  LIBRARIES MassChanger SyncPlayer# experiment
  LIBRARIES MassChanger SyncPlayer
- CATKIN_DEPENDS rospy std_msgs sync_msgs std_srvs
+ CATKIN_DEPENDS rospy std_msgs sync_msgs std_srvs exo_msgs
 #  DEPENDS system_lib
 )
 

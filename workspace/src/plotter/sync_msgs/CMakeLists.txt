@@ -55,6 +55,7 @@ add_message_files(
   ExperimentData.msg
   SyncQ.msg
   response.msg
+  MassData.msg
 )
 
 ## Generate services in the 'srv' folder

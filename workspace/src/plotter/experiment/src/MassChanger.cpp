@@ -4,6 +4,7 @@
 #include <chrono>
 #include "experiment_srvs/MassChange.h"
 #include "sync_msgs/ExperimentData.h"
+#include "sync_msgs/MassData.h"
 
 MassChanger::MassChanger(ros::NodeHandle handle)
 {
@@ -52,9 +53,27 @@ MassChanger::MassChanger(ros::NodeHandle handle)
             ROS_INFO_STREAM("Duration: " << this->mass_time[i]);
         }
     }
+    else if(this->change_mode == "PHYSICAL"){
+        std::uniform_int_distribution<int> uniform_dist(this->trial_params["min"],this->trial_params["max"]);
+        std::vector<double> phys_list;
+        for(auto it: this->mass_order){
+            for (int j = 0; j < this->trial_params["min"]; ++j){
+                phys_list.push_back(this->mass_list[it]);
+            }
+        }
+        for (int i = 0; i < this->mass_order.size(); ++i){
+            ROS_INFO_STREAM("Mass: " << this->mass_order[i]);
+            std::shuffle(std::begin(phys_list), std::end(phys_list), rng);
+            this->physical_mass_trials.insert(this->physical_mass_trials.begin(), phys_list.begin(), phys_list.end());
+            double trial = this->trial_params["min"] * this->mass_order.size();
+            this->trials.push_back(trial);
+            this->mass_time.push_back(this->trial_params["length"] * trial);
+        }
+    }
 
     this->mass_client = handle.serviceClient<experiment_srvs::MassChange>("change_mass");
     this->mass_iterator = 0;
+    this->trial_iterator = 0;
 
     this->toggle_server = handle.advertiseService("toggle_mass", &MassChanger::toggleCallback, this);
     this->sync_sub = handle.subscribe("q_sync", 100, &MassChanger::syncCallback, this);
@@ -64,6 +83,10 @@ MassChanger::MassChanger(ros::NodeHandle handle)
     }
 
     this->exp_pub = this->handler.advertise<sync_msgs::ExperimentData>("exp", 1);
+
+    if (this->change_mode == "PHYSICAL"){
+        this->mass_trial_pub = handle.advertise<sync_msgs::MassData>("mass_trial", 1); // publishing real time rather than send as meta data because bagpy sucks with arrays
+    }
 
 }
 
@@ -107,6 +130,15 @@ bool MassChanger::toggleCallback(experiment_srvs::Trigger::Request &req, experim
     return true;
 }
 
+void MassChanger::endExperiment()
+{
+    this->start = false;
+    experiment_srvs::Trigger end_trigger;
+    end_trigger.request.trigger.data = this->start;
+    end_trigger.request.header.stamp = this->current_time;
+    this->toggle_recorder.call(end_trigger);
+}
+
 void MassChanger::sendExperimentData()
 {
     sync_msgs::ExperimentData exp_data;
@@ -130,18 +162,53 @@ void MassChanger::syncCallback(const sync_msgs::CustomData::ConstPtr &msg)
     this->updateTime(msg->header.stamp);
     if (this->start)
     {
-        if (this->current_time - this->start_time > this->wait_time)
-        {
-            if (this->mass_iterator < this->mass_order.size()){
-                this->start_time = this->current_time;
-                this->changeMass();
+        if (this->change_mode == "TRIAL"){
+            if (this->current_time - this->start_time > this->wait_time)
+            {
+                if (this->mass_iterator < this->mass_order.size()){
+                    this->start_time = this->current_time;
+                    this->changeMass();
+                }
+                else{
+                    this->endExperiment();
+                }
+            }
+        }
+        else if (this->change_mode == "PHYSICAL"){
+
+            ros::Duration trial_length;
+            if (this->trial_iterator == 0){
+                trial_length = ros::Duration(this->trial_params["length"] + this->delay);
             }
             else{
-                this->start = false;
-                experiment_srvs::Trigger end_trigger;
-                end_trigger.request.trigger.data = this->start;
-                end_trigger.request.header.stamp = this->current_time;
-                this->toggle_recorder.call(end_trigger);
+                trial_length = ros::Duration(this->trial_params["length"]);
+            }
+
+            if(this->current_time - this->start_time > trial_length){
+                
+                if(this->trial_iterator < this->physical_mass_trials.size()){
+                    sync_msgs::MassData mass_trial_msg;
+                    mass_trial_msg.physical_mass = this->physical_mass_trials[this->trial_iterator];
+                    mass_trial_msg.virtual_mass = this->mass_list[this->mass_order[this->mass_iterator-1]];
+                    mass_trial_pub.publish(mass_trial_msg);
+                    ROS_INFO_STREAM("Published " << this->physical_mass_trials[this->trial_iterator] << " at " << this->mass_list[this->mass_order[this->mass_iterator-1]]);
+
+                    if((this->trial_iterator + 1) % (int(this->trial_params["min"]) * this->mass_order.size()) == 0){
+                        if (this->mass_iterator < this->mass_order.size()){
+                            this->changeMass();
+                        }
+                        else{
+                            this->endExperiment();
+                        }
+                    }
+
+                    this->start_time = this->current_time;
+                    ++(this->trial_iterator);
+                }
+                else{
+                    this->endExperiment();
+                }
+                
             }
         }
     }

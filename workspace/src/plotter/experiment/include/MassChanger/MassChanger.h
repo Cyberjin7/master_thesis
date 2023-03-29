@@ -33,10 +33,12 @@ public:
     std::map<std::string, int> time_limits;
     std::vector<std::string> mass_order;
     std::vector<double> trials;
+    std::vector<double> physical_mass_trials;
 
     ros::Duration wait_time;
     std::vector<int> mass_time; 
     int mass_iterator;
+    int trial_iterator;
 
     ros::Subscriber sync_sub;
     ros::ServiceClient mass_client;
@@ -44,11 +46,13 @@ public:
     experiment_srvs::MassChange mass_srv;
     ros::ServiceClient toggle_recorder;
     ros::Publisher exp_pub;
+    ros::Publisher mass_trial_pub;
 
     void updateTime(ros::Time time);
 
     std::vector<std::string> randomizeOrder(std::map<std::string, double> list, std::default_random_engine rng);
     void sendExperimentData();
+    void endExperiment();
 };
 
 #endif
