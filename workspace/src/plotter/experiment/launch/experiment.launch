@@ -1,6 +1,6 @@
 <launch>
     <arg name="RECORD" default="false"/>
-    <arg name="DELAY" default="0"/>
+    <arg name="DELAY" default="1"/>
     <include file="$(find experiment)/launch/player.launch">
         <arg name="DELAY" value="$(arg DELAY)"/>
     </include>

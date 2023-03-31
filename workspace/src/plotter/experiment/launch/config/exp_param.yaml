@@ -1,5 +1,5 @@
 trajectory: "GEN" # "BAG"
-mode: "PHYSICAL" # "TRIAL" # "TIME", "PHYSICAL"
+mode: "TRIAL" # "PHYSICAL" # "TRIAL" # "TIME", "PHYSICAL"
 gen:
   {
     up: 10.0,
@@ -14,7 +14,7 @@ time:
   }
 trial:
   {
-    length: 2,
+    length: 20,
     min: 5,
     max: 7
   }
