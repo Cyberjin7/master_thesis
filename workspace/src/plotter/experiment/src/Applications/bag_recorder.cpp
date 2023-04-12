@@ -141,7 +141,7 @@ int main(int argc, char **argv)
 
     ros::Subscriber exp_sub = n.subscribe("exp", 1, bagRecorder::expCallback);
     ros::Subscriber response_sub = n.subscribe("response", 1, bagRecorder::responseCallback);
-    ros::Subscriber state_sub = n.subscribe("state_sync", 1, bagRecorder::stateCallback);
+    ros::Subscriber state_sub = n.subscribe("state_sync", 100, bagRecorder::stateCallback);
 
     bagRecorder::bag.open(bag_file, rosbag::bagmode::Write);
 

@@ -76,7 +76,7 @@ namespace SyncPlayer{
         if (!this->play)
         {
             this->play = true;
-            this->traj_gen.startGen(this->calculateTime());
+            // this->traj_gen.startGen(this->sync_time);
         }
         else{
             this->play = false;
@@ -120,9 +120,12 @@ namespace SyncPlayer{
 
     ros::Time SyncPlayer::calculateFuture()
     {
-        this->future_time = this->sync_time;
-        this->future_time.sec += this->delay;
-        return this->future_time;
+        ros::Time future = this->sync_time;
+        future.sec += this->delay;
+        // this->future_time = this->sync_time;
+        // this->future_time.sec += this->delay;
+        // return this->future_time;
+        return future;
     }
 
     void SyncPlayer::itBag()
@@ -148,30 +151,35 @@ namespace SyncPlayer{
             }
     }
 
-    void SyncPlayer::synchronize()
+    void SyncPlayer::updateRef()
     {
-        this->sync_time = this->calculateTime();
-        this->ref_msg.header.stamp = this->calculateFuture();
-        if(this->play)
-        {
-            if (this->trajectory_mode == "BAG")
-            {
+        if (this->play){
+            if(this->trajectory_mode == "BAG"){
                 this->itBag();
             }
-            else if (this->trajectory_mode == "GEN")
-            {
+            else if(this->trajectory_mode == "GEN"){
                 this->ref_msg.value.data = this->traj_gen.generate(this->sync_time);
-                this->state_msg.high = this->traj_gen.getPeak();
+                this->state_msg.high = this->traj_gen.getHigh();
             }
         }
-        else
-        {
+        else{
             this->ref_msg.value.data = 0;
         }
+    }
+
+    void SyncPlayer::synchronizeTime()
+    {
+        this->sync_time = this->calculateTime();
+        this->future_time = this->calculateFuture();
 
         this->q_msg.header.stamp = this->sync_time;
         this->state_msg.header.stamp = this->sync_time;
+        this->ref_msg.header.stamp = this->future_time;
 
+    }
+
+    void SyncPlayer::publish()
+    {
         this->q_ref_pub.publish(this->ref_msg);
         this->q_pub.publish(this->q_msg);
         this->sync_state_pub.publish(this->state_msg);
