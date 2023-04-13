@@ -41,7 +41,7 @@ namespace SyncPlayer{
         // custom_ros_msgs::CustomData sync_msg;
         // sync_msg.header.stamp = this->sync_time;
         this->q_msg.value.data = msg->data;
-        this->q_pub.publish(q_msg);
+        // this->q_pub.publish(q_msg);
     }
 
     void SyncPlayer::stateCallback(const exo_msgs::state::ConstPtr& msg)

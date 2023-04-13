@@ -85,6 +85,7 @@ MassChanger::MassChanger(ros::NodeHandle handle)
     this->exp_pub = this->handler.advertise<sync_msgs::ExperimentData>("exp", 1);
 
     if (this->change_mode == "PHYSICAL"){
+        // TODO: do this for all modes
         this->mass_trial_pub = handle.advertise<sync_msgs::MassData>("mass_trial", 1); // publishing real time rather than send as meta data because bagpy sucks with arrays
     }
 

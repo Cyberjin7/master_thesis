@@ -157,6 +157,9 @@ add_dependencies(SyncPlayer
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_player_trigger src/Applications/player_starter.cpp)
 add_executable(${PROJECT_NAME}_mass_changer src/Applications/mass_changer.cpp)
+add_executable(${PROJECT_NAME}_mass_changer_time src/Applications/mass_changer_time.cpp)
+add_executable(${PROJECT_NAME}_mass_changer_trial src/Applications/mass_changer_trial.cpp)
+add_executable(${PROJECT_NAME}_mass_changer_physical src/Applications/mass_changer_physical.cpp) # automate this later
 add_executable(${PROJECT_NAME}_sync_player src/Applications/sync_player.cpp)
 add_executable(${PROJECT_NAME}_recorder src/Applications/bag_recorder.cpp)
 add_executable(${PROJECT_NAME}_analyzer src/Applications/data_analyser.cpp)
@@ -171,6 +174,9 @@ add_executable(${PROJECT_NAME}_analyzer src/Applications/data_analyser.cpp)
 ## same as for the library above
 add_dependencies(${PROJECT_NAME}_player_trigger ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(${PROJECT_NAME}_mass_changer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME}_mass_changer_time ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME}_mass_changer_trial ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME}_mass_changer_physical ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(${PROJECT_NAME}_sync_player ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(${PROJECT_NAME}_recorder ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(${PROJECT_NAME}_analyzer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
@@ -180,6 +186,18 @@ target_link_libraries(${PROJECT_NAME}_player_trigger
   ${catkin_LIBRARIES}
 )
 target_link_libraries(${PROJECT_NAME}_mass_changer
+  ${catkin_LIBRARIES}
+  MassChanger
+)
+target_link_libraries(${PROJECT_NAME}_mass_changer_time
+  ${catkin_LIBRARIES}
+  MassChanger
+)
+target_link_libraries(${PROJECT_NAME}_mass_changer_trial
+  ${catkin_LIBRARIES}
+  MassChanger
+)
+target_link_libraries(${PROJECT_NAME}_mass_changer_physical
   ${catkin_LIBRARIES}
   MassChanger
 )
