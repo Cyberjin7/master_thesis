@@ -14,9 +14,9 @@ time:
   }
 trial:
   {
-    length: 20,
+    length: 2,
     min: 5,
-    max: 7
+    max: 5
   }
 amplitude:
   {

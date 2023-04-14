@@ -30,6 +30,8 @@ MassChanger::MassChanger(ros::NodeHandle handle)
     //     this->mass_order.push_back(imap.first);
     // }
     // std::shuffle(std::begin(this->mass_order), std::end(this->mass_order), rng);
+
+    /*
     this->mass_order = randomizeOrder(this->mass_list, rng);
 
     if (this->change_mode == "TIME"){
@@ -70,6 +72,7 @@ MassChanger::MassChanger(ros::NodeHandle handle)
             this->mass_time.push_back(this->trial_params["length"] * trial);
         }
     }
+    */
 
     this->mass_client = handle.serviceClient<experiment_srvs::MassChange>("change_mass");
     this->mass_iterator = 0;
@@ -222,10 +225,16 @@ void MassChanger::syncCallback(const sync_msgs::CustomData::ConstPtr &msg)
 
 void MassChanger::changeMass()
 {
-    experiment_srvs::MassChange change_mass;
-    change_mass.request.mass.data = this->mass_list[this->mass_order[this->mass_iterator]];
-    this->mass_client.call(change_mass);
-    ROS_INFO_STREAM("Change mass to: " << change_mass.request.mass.data);
+    if(this->mass_iterator==0 || (this->mass_order[this->mass_iterator] != this->mass_order[this->mass_iterator-1])){
+        experiment_srvs::MassChange change_mass;
+        change_mass.request.mass.data = this->mass_list[this->mass_order[this->mass_iterator]];
+        this->mass_client.call(change_mass);
+        ROS_INFO_STREAM("Change mass to: " << change_mass.request.mass.data);
+    }
+    // experiment_srvs::MassChange change_mass;
+    // change_mass.request.mass.data = this->mass_list[this->mass_order[this->mass_iterator]];
+    // this->mass_client.call(change_mass);
+    // ROS_INFO_STREAM("Change mass to: " << change_mass.request.mass.data);
 
     if(this->mass_iterator == 0){
         this->wait_time = ros::Duration(this->mass_time[this->mass_iterator] + this->delay);
@@ -234,7 +243,7 @@ void MassChanger::changeMass()
         this->wait_time = ros::Duration(this->mass_time[this->mass_iterator]);
     }
 
-    ROS_INFO_STREAM("For " << this->wait_time << " seconds");
+    ROS_INFO_STREAM("Next trial: " << this->wait_time << " seconds");
     ++(this->mass_iterator);
 }
 
