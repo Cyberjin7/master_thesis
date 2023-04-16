@@ -10,6 +10,7 @@ MassChanger::MassChanger(ros::NodeHandle handle)
 {
     this->handler = handle;
     start = false;
+    // TODO: Parameters should be loaded externally
     ros::param::get("~mass", this->mass_list);
     ros::param::get("~time", this->time_limits);
     ros::param::get("~mode", this->change_mode);
@@ -96,6 +97,11 @@ MassChanger::MassChanger(ros::NodeHandle handle)
 
 MassChanger::~MassChanger()
 {
+}
+
+void MassChanger::generateOrder()
+{
+
 }
 
 std::vector<std::string> MassChanger::randomizeOrder(std::map<std::string, double> list, std::default_random_engine rng)
@@ -226,15 +232,12 @@ void MassChanger::syncCallback(const sync_msgs::CustomData::ConstPtr &msg)
 void MassChanger::changeMass()
 {
     if(this->mass_iterator==0 || (this->mass_order[this->mass_iterator] != this->mass_order[this->mass_iterator-1])){
+        // TODO: instead of service, use the publisher mass_trial_pub
         experiment_srvs::MassChange change_mass;
         change_mass.request.mass.data = this->mass_list[this->mass_order[this->mass_iterator]];
         this->mass_client.call(change_mass);
         ROS_INFO_STREAM("Change mass to: " << change_mass.request.mass.data);
     }
-    // experiment_srvs::MassChange change_mass;
-    // change_mass.request.mass.data = this->mass_list[this->mass_order[this->mass_iterator]];
-    // this->mass_client.call(change_mass);
-    // ROS_INFO_STREAM("Change mass to: " << change_mass.request.mass.data);
 
     if(this->mass_iterator == 0){
         this->wait_time = ros::Duration(this->mass_time[this->mass_iterator] + this->delay);

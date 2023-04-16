@@ -17,8 +17,9 @@ public:
     MassChanger(ros::NodeHandle handle);
     ~MassChanger();
     bool toggleCallback(experiment_srvs::Trigger::Request &req, experiment_srvs::Trigger::Response &res);
-    void syncCallback(const sync_msgs::CustomData::ConstPtr &msg);
+    void syncCallback(const sync_msgs::CustomData::ConstPtr &msg); 
     void changeMass();
+    virtual void generateOrder();
     ros::Time start_time;
     ros::Time current_time;
     bool start;
