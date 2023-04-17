@@ -9,6 +9,8 @@
 class TrialPhysical : public MassChanger
 {
     public:
+        std::vector<double> physical_mass_trials;
+
         TrialPhysical(ros::NodeHandle handle) : MassChanger(handle){}
 
         void syncCallback(const sync_msgs::SyncQ::ConstPtr &msg)
@@ -21,6 +23,7 @@ class TrialPhysical : public MassChanger
                         changeMass();
                     }
                     else{
+                        ROS_WARN_STREAM("Done!");
                         endExperiment();
                     }
                 }

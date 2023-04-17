@@ -22,6 +22,7 @@ class TrialMass : public MassChanger
                         changeMass();
                     }
                     else{
+                        ROS_WARN_STREAM("Done!");
                         endExperiment();
                     }
                 }
@@ -30,7 +31,6 @@ class TrialMass : public MassChanger
 
         void generateOrder() override
         {
-            // TODO: adapt as member function
             unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
             std::default_random_engine rng(seed);
             std::uniform_int_distribution<int> uniform_dist(trial_params["min"], trial_params["max"]);
