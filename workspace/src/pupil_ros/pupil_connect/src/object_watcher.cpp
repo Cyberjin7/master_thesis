@@ -14,13 +14,14 @@ class ObjectEyer{
         int64_t xmax;
         int64_t ymin;
         int64_t ymax;
+        ros::Publisher fix_object_pub;
     public:
-        ObjectEyer();
+        ObjectEyer(ros::NodeHandle handle);
         void fixationCallback(const pupil_msgs::fixation::ConstPtr& fixation);
         void objectCallback(const darknet_ros_msgs::BoundingBoxes::ConstPtr& box);
 };
 
-ObjectEyer::ObjectEyer()
+ObjectEyer::ObjectEyer(ros::NodeHandle handle)
 {
     this->gaze_pos.push_back(0.0);
     this->gaze_pos.push_back(0.0);
@@ -30,6 +31,8 @@ ObjectEyer::ObjectEyer()
     this->ymax = 0;
 
     this->boxes.clear();
+
+    this->fix_object_pub = handle.advertise<darknet_ros_msgs::BoundingBoxes>("fixated_objects", 1);
 }
 
 void ObjectEyer::fixationCallback(const pupil_msgs::fixation::ConstPtr& fixation)
@@ -42,11 +45,15 @@ void ObjectEyer::fixationCallback(const pupil_msgs::fixation::ConstPtr& fixation
     // ROS_INFO("x: %f", this->gaze_pos[0]);
     // ROS_INFO("y: %f", this->gaze_pos[1]);
 
+    darknet_ros_msgs::BoundingBoxes msg;
+
     for (auto box : this->boxes){
         if ((box.xmin <= this->gaze_pos[0]) && (this->gaze_pos[0] <= box.xmax) && (box.ymin <= this->gaze_pos[1]) && (this->gaze_pos[1] <= box.ymax)){
             ROS_INFO("Gaze is on: %s", box.Class.data());
+            msg.bounding_boxes.push_back(box);
         }
     }
+    this->fix_object_pub.publish(msg);
 }
 
 void ObjectEyer::objectCallback(const darknet_ros_msgs::BoundingBoxes::ConstPtr& boxes)
@@ -74,12 +81,20 @@ int main(int argc, char **argv)
 
     ros::NodeHandle n;
 
-    ObjectEyer eyer;
+    ObjectEyer eyer(n);
 
     ros::Subscriber fixation_sub = n.subscribe("pupil_fixation", 1, &ObjectEyer::fixationCallback, &eyer);
     ros::Subscriber object_sub = n.subscribe("darknet_ros/bounding_boxes", 1, &ObjectEyer::objectCallback, &eyer);
 
-    ros::spin();
+    ros::Publisher fix_object_pub = n.advertise<darknet_ros_msgs::BoundingBoxes>("fixated_objects", 1);
+
+    ros::Rate r(30);
+
+    // ros::spin();
+    while(ros::ok()){
+        ros::spinOnce();
+        r.sleep();
+    }
 
     return 0;
 }
