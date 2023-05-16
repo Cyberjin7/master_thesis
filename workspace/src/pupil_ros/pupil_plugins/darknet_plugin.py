@@ -1,0 +1,1 @@
+/home/ics-student/pupil/capture_settings/plugins/darknet_plugin.py
