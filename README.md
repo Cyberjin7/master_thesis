@@ -19,3 +19,14 @@
 - Terminal 3:
     - source devel/setup.bash
     - roslaunch darknet_ros darknet_ros.launch
+
+
+### Starting exoskeleton + experiment nodes
+
+1. roscore
+2. roslaunch skin_control skin_driver.launch
+3. roslaunch skin_control skin_control.launch
+4. rosrun rosserial_python serial_node.py /dev/ttyACM0
+5. roslaunch exo_control exo_control.launch
+6. roslaunch experiment experiment.launch
+7. rosrun plotjuggler plotjuggler
