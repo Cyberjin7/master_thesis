@@ -13,6 +13,13 @@ class TrialPhysical : public MassChanger
 
         TrialPhysical(ros::NodeHandle handle) : MassChanger(handle){}
 
+        void changeMass()
+        {
+            nextMass();
+            sendTrialData(this->mass_list[this->mass_order[this->mass_iterator]], physical_mass_trials[this->mass_iterator], this->wait_time.toSec());
+            iterMass();
+        }
+
         void syncCallback(const sync_msgs::SyncQ::ConstPtr &msg)
         {
             updateTime(msg->header.stamp);

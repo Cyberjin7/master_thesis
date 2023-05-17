@@ -18,6 +18,8 @@ public:
     ~MassChanger();
     bool toggleCallback(experiment_srvs::Trigger::Request &req, experiment_srvs::Trigger::Response &res);
     void changeMass();
+    void nextMass();
+    void iterMass();
     virtual void generateOrder();
     ros::Time start_time;
     ros::Time current_time;
@@ -49,6 +51,7 @@ public:
 
     std::vector<std::string> randomizeOrder(std::map<std::string, double> list, std::default_random_engine rng);
     void sendExperimentData();
+    void sendTrialData(double virtual_mass, double physical_mass, double length);
     void endExperiment();
 };
 

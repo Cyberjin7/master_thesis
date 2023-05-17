@@ -103,8 +103,23 @@ void MassChanger::sendExperimentData()
     this->exp_pub.publish(exp_data);
 }
 
+void MassChanger::sendTrialData(double virtual_mass, double physical_mass, double length)
+{
+    sync_msgs::MassData trial_data;
+    trial_data.virtual_mass = virtual_mass;
+    trial_data.physical_mass = physical_mass;
+    trial_data.trial_length = length;
+    mass_trial_pub.publish(trial_data);
+}
 
 void MassChanger::changeMass()
+{
+    nextMass();
+    sendTrialData(this->mass_list[this->mass_order[this->mass_iterator]], 0.0, this->wait_time.toSec());
+    ++(this->mass_iterator);
+}
+
+void MassChanger::nextMass()
 {
     if(this->mass_iterator==0 || (this->mass_order[this->mass_iterator] != this->mass_order[this->mass_iterator-1])){
         // TODO: instead of service, use the publisher mass_trial_pub
@@ -122,6 +137,10 @@ void MassChanger::changeMass()
     }
 
     ROS_INFO_STREAM("Next trial: " << this->wait_time << " seconds");
+}
+
+void MassChanger::iterMass()
+{
     ++(this->mass_iterator);
 }
 

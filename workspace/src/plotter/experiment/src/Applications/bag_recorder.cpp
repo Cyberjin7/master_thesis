@@ -9,6 +9,7 @@
 #include "sync_msgs/ExperimentData.h"
 #include "sync_msgs/SyncQ.h"
 #include "sync_msgs/response.h"
+#include "sync_msgs/MassData.h"
 
 namespace fs = std::filesystem;
 
@@ -59,6 +60,14 @@ namespace bagRecorder
         // }
         ROS_INFO_STREAM("Writing experiment data");
         bagRecorder::bag.write("exp_data", msg->header.stamp, msg);
+    }
+
+    void massCallback(const sync_msgs::MassData::ConstPtr& msg)
+    {
+        if(bagRecorder::record)
+        {
+            bagRecorder::bag.write("mass", ros::Time::now(), msg);
+        }
     }
 
     bool toggleCallback(experiment_srvs::Trigger::Request &req, experiment_srvs::Trigger::Response &res, fs::path bag_path)
@@ -142,6 +151,7 @@ int main(int argc, char **argv)
     ros::Subscriber exp_sub = n.subscribe("exp", 1, bagRecorder::expCallback);
     ros::Subscriber response_sub = n.subscribe("response", 1, bagRecorder::responseCallback);
     ros::Subscriber state_sub = n.subscribe("state_sync", 100, bagRecorder::stateCallback);
+    ros::Subscriber mass_sub = n.subscribe("mass_trial", 1, bagRecorder::massCallback);
 
     bagRecorder::bag.open(bag_file, rosbag::bagmode::Write);
 
