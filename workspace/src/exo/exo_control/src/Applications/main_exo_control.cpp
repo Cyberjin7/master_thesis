@@ -130,6 +130,8 @@ int main(int argc, char** argv)
     ros::param::get("~max", max_angle);
     double min_angle;
     ros::param::get("~min", min_angle);
+    bool predictive;
+    ros::param::get("~predictive_wrench", predictive);
 
     double tao = 0;
 
@@ -164,8 +166,8 @@ int main(int argc, char** argv)
 
     // Calibration
     // double interval_angle, double interval_duration, double wait_duration, double angle_min, double angle_max
-    ExoControllers::Calibration down_cal(interval, duration, wait, min_angle, max_angle);
-    ExoControllers::Calibration up_cal(interval, duration, wait, min_angle, max_angle);
+    ExoControllers::Calibration down_cal(interval, duration, wait, min_angle, max_angle, predictive);
+    ExoControllers::Calibration up_cal(interval, duration, wait, min_angle, max_angle, false);
     // calibrator.set_start(true);
     for(auto i: down_cal.get_cal_angles()){
         ROS_INFO_STREAM("Calibration angle: " << i);
@@ -247,6 +249,23 @@ int main(int argc, char** argv)
             Ws_down = forceControl.downFilterreading[9] - down_cal.interp_force(q1*180/3.14159265359);
             Ws_up = forceControl.upFilterreading[9] - up_cal.interp_force(q1*180/3.14159265359);
 
+            /*
+            Approach 1: Roughly assume mass is placed on top of skin.
+            Linear extrapolation: based on the stored calibraiton value, extrapolate sensor value for predicted mass and subtract in addition to stored value
+            */
+            if(predictive){
+                Ws_down = forceControl.downFilterreading[9] - (1+(m3/m2))*down_cal.interp_force(q1*180/3.14159265359);
+            }
+
+            /*
+            Approach 2: Subtract theoretical torque of predicted mass
+            Linear extrapolate force value from sensor readings based on stored calibration values
+            */
+           if(predictive){
+               Ws_down = forceControl.downFilterreading[9] - down_cal.interp_force(q1*180/3.14159265359);
+               Ws_down = -m2*g*sin(q1)*(Ws_down)/(down_cal.interp_force(q1*180/3.14159265359)); // minus just to get rid of the minus in g
+           }
+
             if(Ws_down < 0){
                 Ws_down = 0.0;
             }
@@ -275,6 +294,11 @@ int main(int argc, char** argv)
             // // call force control update
             prev_torque = tao;
             tao = forceControl.update(Ws) + g_matrix;
+            // Approach 2: 
+            if(predictive){
+                tao = tao - g*L3*m3*sin(q1);
+            }
+
             // ROS_WARN_STREAM("tao=" << tao);
             // if(std::abs(tao - prev_torque) > 0.1){
             //     tao = prev_torque;

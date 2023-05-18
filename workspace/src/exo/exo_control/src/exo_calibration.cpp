@@ -3,7 +3,7 @@
 
 namespace ExoControllers{
 
-    Calibration::Calibration(double interval_angle, double interval_duration, double wait_duration, double angle_min, double angle_max){
+    Calibration::Calibration(double interval_angle, double interval_duration, double wait_duration, double angle_min, double angle_max, bool predictive){
         this->start = false;
         this->record = false;
 
@@ -25,6 +25,7 @@ namespace ExoControllers{
 
         this->intv_iter = 0;
 
+        this->predictive = predictive;
     }
 
     Calibration::~Calibration(){}
@@ -85,6 +86,22 @@ namespace ExoControllers{
         return force;
     }
 
+    double Calibration::interp_force(double q, double mass){
+        int i;
+        for (i = 0; i < this->cal_angles.size(); ++i)
+        {
+            // The overlap in angles is intended. 
+            if((q >= this->cal_angles[i]) && (q <= this->cal_angles[i+1])){
+                break;
+            }
+        }
+        double q_i = this->cal_angles[i];
+        double q_i1 = this->cal_angles[i+1];
+        double force = (q - q_i)*(this->cal_values[q_i1] - this->cal_values[q_i])/(q_i1 - q_i) + this->cal_values[q_i];
+        // ROS_INFO_STREAM("Interp: " << force);
+        return force;
+    }
+
     bool Calibration::get_record(){
         return this->record;
     }
@@ -113,8 +130,17 @@ namespace ExoControllers{
         return this->cal_angles;
     }
 
+    bool Calibration::get_predictive(){
+        return this->predictive;
+    }
+
     void Calibration::set_start(bool toggle)
     {
         this->start = toggle;
+    }
+
+    void Calibration::set_predictive(bool toggle)
+    {
+        this->predictive = toggle;
     }
 }

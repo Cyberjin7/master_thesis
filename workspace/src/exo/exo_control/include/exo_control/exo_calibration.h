@@ -12,6 +12,7 @@ namespace ExoControllers
         private:
             bool start;
             bool record;
+            bool predictive;
             double interval_angle;
             ros::Duration interval_duration;
             ros::Duration wait_duration;
@@ -21,11 +22,12 @@ namespace ExoControllers
             std::vector<double> cal_angles;
             int intv_iter;
         public:
-            Calibration(double interval_angle, double interval_duration, double wait_duration, double angle_min, double angle_max);
+            Calibration(double interval_angle, double interval_duration, double wait_duration, double angle_min, double angle_max, bool predictive);
             ~Calibration();
 
             bool get_start();
             bool get_record();
+            bool get_predictive();
             double get_interval_angle();
             ros::Duration get_interval_duration();
             ros::Duration get_wait_duration();
@@ -33,9 +35,11 @@ namespace ExoControllers
             std::vector<double> get_cal_angles();
 
             void set_start(bool toggle);
+            void set_predictive(bool toggle);
 
             double calibrate(double force);
             double interp_force(double q);
+            double interp_force(double q, double mass);
     };
 }
 
