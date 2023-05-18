@@ -11,6 +11,7 @@ namespace SyncPlayer
             ros::Time start_time;
             std::map<std::string, double> gen_param;
             bool high;
+            bool start;
             double traj;
             double peak;
         public:
@@ -20,6 +21,10 @@ namespace SyncPlayer
             void startGen(ros::Time time);
             void loadParams(std::map<std::string, double> params);
             bool getPeak();
+            bool getHigh();
+
+            bool get_start();
+            void set_start(bool toggle);
     };
 
 }

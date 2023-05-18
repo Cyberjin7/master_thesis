@@ -17,14 +17,15 @@ public:
     MassChanger(ros::NodeHandle handle);
     ~MassChanger();
     bool toggleCallback(experiment_srvs::Trigger::Request &req, experiment_srvs::Trigger::Response &res);
-    void syncCallback(const sync_msgs::CustomData::ConstPtr &msg);
     void changeMass();
+    void nextMass();
+    void iterMass();
+    virtual void generateOrder();
     ros::Time start_time;
     ros::Time current_time;
     bool start;
     ros::NodeHandle handler;
 
-    std::string change_mode;
     std::string traj_mode;
     int delay;
 
@@ -33,12 +34,10 @@ public:
     std::map<std::string, int> time_limits;
     std::vector<std::string> mass_order;
     std::vector<double> trials;
-    std::vector<double> physical_mass_trials;
 
     ros::Duration wait_time;
     std::vector<int> mass_time; 
     int mass_iterator;
-    int trial_iterator;
 
     ros::Subscriber sync_sub;
     ros::ServiceClient mass_client;
@@ -52,6 +51,7 @@ public:
 
     std::vector<std::string> randomizeOrder(std::map<std::string, double> list, std::default_random_engine rng);
     void sendExperimentData();
+    void sendTrialData(double virtual_mass, double physical_mass, double length);
     void endExperiment();
 };
 

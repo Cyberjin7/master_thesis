@@ -8,6 +8,7 @@
 
 #include "SyncPlayer/SyncPlayer.h"
 #include "MassChanger/MassChanger.h"
+#include "SyncPlayer/TrajGen.h"
 
 #include <fstream>
 
@@ -58,8 +59,6 @@ int main(int argc, char **argv)
         player.traj_gen.loadParams(traj_params);
     }
 
-    //MassChanger mass(n);
-
     //ros::Subscriber q_sub = n.subscribe("q", 100, &SyncPlayer::qCallback, &player);
     // ros::ServiceServer start_srv = n.advertiseService<std_srvs::Empty::Request, std_srvs::Empty::Response>("user_trigger", boost::bind(startCallback, _1, _2, &player));
     // Source: https://answers.ros.org/question/63991/how-to-make-callback-function-called-by-several-subscriber/?answer=63998#post-id-63998 
@@ -68,8 +67,15 @@ int main(int argc, char **argv)
 
     while (ros::ok())
     {
-        player.synchronize();
-        //mass.updateTime(player.sync_time);
+        player.synchronizeTime();
+
+        if(player.play && !player.traj_gen.get_start()){
+            player.traj_gen.startGen(player.sync_time);
+            ROS_INFO_STREAM("Time: " << player.sync_time);
+        }
+
+        player.updateRef();
+        player.publish();
         
         ros::spinOnce();
         loop.sleep();

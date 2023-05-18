@@ -55,9 +55,11 @@ namespace SyncPlayer
         ros::Time calculateFuture();
         ros::Time calculateTime();
         void loadBag(std::string bag_path);
-        void synchronize();
+        void synchronizeTime();
         void playToggle();
         void itBag();
+        void publish();
+        void updateRef();
 
     };
 }

@@ -2,8 +2,8 @@ trajectory: "GEN" # "BAG"
 mode: "TRIAL" # "PHYSICAL" # "TRIAL" # "TIME", "PHYSICAL"
 gen:
   {
-    up: 10.0,
-    down: 10.0,
+    up: 1.0,
+    down: 1.0,
     min: 30,
     max: 80
   }
@@ -14,9 +14,9 @@ time:
   }
 trial:
   {
-    length: 20,
-    min: 5,
-    max: 7
+    length: 2,
+    min: 6,
+    max: 6
   }
 amplitude:
   {
