@@ -1,8 +1,10 @@
 #include "ros/ros.h"
 #include "pupil_msgs/fixation.h"
+#include "pupil_msgs/gaze.h"
 #include "darknet_ros_msgs/BoundingBoxes.h"
 #include "darknet_ros_msgs/BoundingBox.h"
 #include <inttypes.h>
+#include "std_msgs/Float64.h"
 
 #include <sstream>
 
@@ -15,13 +17,17 @@ class ObjectEyer{
         int64_t ymin;
         int64_t ymax;
         ros::Publisher fix_object_pub;
+        ros::Publisher mass_pub;
+        std::map<std::string, double> object_mass_list;
     public:
-        ObjectEyer(ros::NodeHandle handle);
+        ObjectEyer(ros::NodeHandle handle, std::map<std::string, double> object_list);
         void fixationCallback(const pupil_msgs::fixation::ConstPtr& fixation);
+        void gazeCallback(const pupil_msgs::gaze::ConstPtr& gaze);
         void objectCallback(const darknet_ros_msgs::BoundingBoxes::ConstPtr& box);
+        void sendMass(std::vector<double> gaze_norm_pos);
 };
 
-ObjectEyer::ObjectEyer(ros::NodeHandle handle)
+ObjectEyer::ObjectEyer(ros::NodeHandle handle, std::map<std::string, double> object_list)
 {
     this->gaze_pos.push_back(0.0);
     this->gaze_pos.push_back(0.0);
@@ -32,7 +38,45 @@ ObjectEyer::ObjectEyer(ros::NodeHandle handle)
 
     this->boxes.clear();
 
-    this->fix_object_pub = handle.advertise<darknet_ros_msgs::BoundingBoxes>("fixated_objects", 1);
+    this->object_mass_list = object_list;
+
+    // this->fix_object_pub = handle.advertise<darknet_ros_msgs::BoundingBoxes>("fixated_objects", 1);
+    this->mass_pub = handle.advertise<std_msgs::Float64>("mass_change", 60);
+}
+
+void ObjectEyer::sendMass(std::vector<double> gaze_norm_pos)
+{
+    std::string object;
+    for (auto box: this->boxes){
+        if ((box.xmin <= gaze_norm_pos[0]) && (gaze_norm_pos[0] <= box.xmax) && (box.ymin <= gaze_norm_pos[1]) && (gaze_norm_pos[1] <= box.ymax)){
+            ROS_INFO("Gaze is on: %s", box.Class.data());
+            object.clear();
+            object = box.Class.data();
+        }
+    }
+    std_msgs::Float64 msg;
+    msg.data = this->object_mass_list[object];
+    this->mass_pub.publish(msg);
+}
+
+void ObjectEyer::gazeCallback(const pupil_msgs::gaze::ConstPtr& gaze)
+{
+    this->gaze_pos[0] = gaze->norm_pos.x*1200;
+    this->gaze_pos[1] = 720*(1 - gaze->norm_pos.y);
+    // ROS_INFO("x: %f", this->gaze_pos[0]);
+    // ROS_INFO("y: %f", this->gaze_pos[1]);
+    // std::string object;
+    // for (auto box: this->boxes){
+    //     if ((box.xmin <= this->gaze_pos[0]) && (this->gaze_pos[0] <= box.xmax) && (box.ymin <= this->gaze_pos[1]) && (this->gaze_pos[1] <= box.ymax)){
+    //         ROS_INFO("Gaze is on: %s", box.Class.data());
+    //         object.clear();
+    //         object = box.Class.data();
+    //     }
+    // }
+    // std_msgs::Float64 msg;
+    // msg.data = this->object_mass_list[object];
+    // this->mass_pub.publish(msg);
+    sendMass(this->gaze_pos);
 }
 
 void ObjectEyer::fixationCallback(const pupil_msgs::fixation::ConstPtr& fixation)
@@ -45,15 +89,16 @@ void ObjectEyer::fixationCallback(const pupil_msgs::fixation::ConstPtr& fixation
     // ROS_INFO("x: %f", this->gaze_pos[0]);
     // ROS_INFO("y: %f", this->gaze_pos[1]);
 
-    darknet_ros_msgs::BoundingBoxes msg;
+    // darknet_ros_msgs::BoundingBoxes msg;
 
-    for (auto box : this->boxes){
-        if ((box.xmin <= this->gaze_pos[0]) && (this->gaze_pos[0] <= box.xmax) && (box.ymin <= this->gaze_pos[1]) && (this->gaze_pos[1] <= box.ymax)){
-            ROS_INFO("Gaze is on: %s", box.Class.data());
-            msg.bounding_boxes.push_back(box);
-        }
-    }
-    this->fix_object_pub.publish(msg);
+    // for (auto box : this->boxes){
+    //     if ((box.xmin <= this->gaze_pos[0]) && (this->gaze_pos[0] <= box.xmax) && (box.ymin <= this->gaze_pos[1]) && (this->gaze_pos[1] <= box.ymax)){
+    //         ROS_INFO("Gaze is on: %s", box.Class.data());
+    //         msg.bounding_boxes.push_back(box);
+    //     }
+    // }
+    // this->fix_object_pub.publish(msg);
+    sendMass(this->gaze_pos);
 }
 
 void ObjectEyer::objectCallback(const darknet_ros_msgs::BoundingBoxes::ConstPtr& boxes)
@@ -81,14 +126,29 @@ int main(int argc, char **argv)
 
     ros::NodeHandle n;
 
-    ObjectEyer eyer(n);
+    std::map<std::string, double> object_list;
+    ros::param::get("~objects", object_list);
 
-    ros::Subscriber fixation_sub = n.subscribe("pupil_fixation", 1, &ObjectEyer::fixationCallback, &eyer);
+    ObjectEyer eyer(n, object_list);
+
+    bool fixation;
+    ros::param::get("~fixation", fixation);
+
+    // TODO: Should make a launch file where user can choose between gaze or fixation. Load config file for object mass relationship
+    ros::Subscriber eye_sub;
+    if(fixation){
+        eye_sub = n.subscribe("pupil_fixation", 1, &ObjectEyer::fixationCallback, &eyer);
+    }
+    else{
+        eye_sub = n.subscribe("pupil_gaze", 60, &ObjectEyer::gazeCallback, &eyer);
+    }
+    // ros::Subscriber fixation_sub = n.subscribe("pupil_fixation", 1, &ObjectEyer::fixationCallback, &eyer);
+    // ros::Subscriber gaze_sub = n.subscribe("pupil_gaze", 60, &ObjectEyer::gazeCallback, &eyer);
+
     ros::Subscriber object_sub = n.subscribe("darknet_ros/bounding_boxes", 1, &ObjectEyer::objectCallback, &eyer);
 
-    ros::Publisher fix_object_pub = n.advertise<darknet_ros_msgs::BoundingBoxes>("fixated_objects", 1);
 
-    ros::Rate r(30);
+    ros::Rate r(60);
 
     // ros::spin();
     while(ros::ok()){

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
 
-<arg name="PREDICTIVE" default="false"/>
+<arg name="PREDICTIVE" default="true"/>
 <node name="exo_control"
           pkg="exo_control"
           type="exo_control"

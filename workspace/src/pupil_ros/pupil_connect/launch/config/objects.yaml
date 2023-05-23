@@ -1,0 +1,10 @@
+objects:
+  {
+    bottle: 1.5,
+    cup: 0.1,
+    wine glass: 0.1,
+    mouse: 0.1,
+    book: 0.2,
+    tvmonitor: 1.0,
+    keyboard: 0.2
+  }

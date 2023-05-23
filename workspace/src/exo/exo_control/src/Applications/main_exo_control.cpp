@@ -261,10 +261,10 @@ int main(int argc, char** argv)
             Approach 2: Subtract theoretical torque of predicted mass
             Linear extrapolate force value from sensor readings based on stored calibration values
             */
-           if(predictive){
-               Ws_down = forceControl.downFilterreading[9] - down_cal.interp_force(q1*180/3.14159265359);
-               Ws_down = -m2*g*sin(q1)*(Ws_down)/(down_cal.interp_force(q1*180/3.14159265359)); // minus just to get rid of the minus in g
-           }
+        //    if(predictive){
+        //        Ws_down = forceControl.downFilterreading[9] - down_cal.interp_force(q1*180/3.14159265359);
+        //        Ws_down = -m2*g*sin(q1)*(Ws_down)/(down_cal.interp_force(q1*180/3.14159265359)); // minus just to get rid of the minus in g
+        //    }
 
             if(Ws_down < 0){
                 Ws_down = 0.0;
@@ -295,9 +295,9 @@ int main(int argc, char** argv)
             prev_torque = tao;
             tao = forceControl.update(Ws) + g_matrix;
             // Approach 2: 
-            if(predictive){
-                tao = tao - g*L3*m3*sin(q1);
-            }
+            // if(predictive){
+            //     tao = tao - g*L3*m3*sin(q1);
+            // }
 
             // ROS_WARN_STREAM("tao=" << tao);
             // if(std::abs(tao - prev_torque) > 0.1){

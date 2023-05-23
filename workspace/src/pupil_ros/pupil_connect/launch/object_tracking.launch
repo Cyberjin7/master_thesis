@@ -1,0 +1,7 @@
+<launch>
+    <arg name="FIXATION" default="false"/>
+    <node name="object_tracker" pkg="pupil_connect" type="pupil_connect_obj_ident" output="screen">
+        <rosparam file="$(find pupil_connect)/launch/config/objects.yaml" command="load"/>
+        <param name="fixation" value="$(arg FIXATION)" type="bool" />
+    </node>
+</launch>
