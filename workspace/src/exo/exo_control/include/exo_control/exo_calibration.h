@@ -13,6 +13,7 @@ namespace ExoControllers
             bool start;
             bool record;
             bool predictive;
+            bool done;
             double interval_angle;
             ros::Duration interval_duration;
             ros::Duration wait_duration;
@@ -28,6 +29,7 @@ namespace ExoControllers
             bool get_start();
             bool get_record();
             bool get_predictive();
+            bool get_done();
             double get_interval_angle();
             ros::Duration get_interval_duration();
             ros::Duration get_wait_duration();
@@ -36,6 +38,9 @@ namespace ExoControllers
 
             void set_start(bool toggle);
             void set_predictive(bool toggle);
+            void set_done(bool toggle);
+
+            void start_cal();
 
             double calibrate(double force);
             double interp_force(double q);

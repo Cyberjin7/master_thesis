@@ -1,6 +1,6 @@
 L1: 0.32
 L2: 0.27
-L3: 0.1
+L3: 0.05
 m2: 1.5
 m3: 0.0
 b1: 0.5
@@ -17,12 +17,15 @@ pos_ctrl:
   kd: 3.0
 
 force_ctrl:
-  kp_up: 7.5
-  kp_down: 6.5
+  kp_up: 10.0 # 7.5
+  kp_down: 2.5 # 8.0 # 6.5 # additional kp for mass scaled version?
   ki_up: 2.0
   ki_down: 2.0
   kd_up: 0.0
   kd_down: 0.0
+
+compensation_ctrl:
+  kp_down: 0.5
 
 calibration:
   interval: 10.0

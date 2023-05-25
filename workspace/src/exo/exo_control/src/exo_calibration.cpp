@@ -26,6 +26,7 @@ namespace ExoControllers{
         this->intv_iter = 0;
 
         this->predictive = predictive;
+        this->done = false;
     }
 
     Calibration::~Calibration(){}
@@ -55,6 +56,7 @@ namespace ExoControllers{
                         ROS_INFO_STREAM("Calibration finished");
                         this->start = false;
                         this->intv_iter = 0;
+                        this->done = true;
                     }
                     t = ros::Time::now();
                 }
@@ -110,6 +112,10 @@ namespace ExoControllers{
         return this->start;
     }
 
+    bool Calibration::get_done(){
+        return this->done;
+    }
+
     double Calibration::get_interval_angle(){
         return this->interval_angle;
     }
@@ -142,5 +148,17 @@ namespace ExoControllers{
     void Calibration::set_predictive(bool toggle)
     {
         this->predictive = toggle;
+    }
+
+    void Calibration::set_done(bool toggle)
+    {
+        this->done = toggle;
+    }
+
+    void Calibration::start_cal()
+    {
+        this->set_start(true);
+        this->set_done(false);
+        this->t = ros::Time::now();
     }
 }

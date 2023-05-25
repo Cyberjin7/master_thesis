@@ -34,7 +34,8 @@ bool change_mass(experiment_srvs::MassChange::Request &req, experiment_srvs::Mas
 
 bool start_cal(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res, ExoControllers::Calibration* exo_cal)
 {
-    exo_cal->set_start(true);
+    // exo_cal->set_start(true);
+    exo_cal->start_cal();
     return true;
 }
 
@@ -120,6 +121,9 @@ int main(int argc, char** argv)
     s << ns;
     ros::param::get(s.str(), g);
 
+    double kp_down;
+    ros::param::get("~compensation_ctrl/kp_down", kp_down);
+
     double interval;
     ros::param::get("~calibration/interval", interval);
     double duration;
@@ -199,6 +203,8 @@ int main(int argc, char** argv)
     double prev_q = 0;
     double tmp;
 
+    bool direction = true; // up is false, down is true
+
     while (ros::ok())
     {
         gx = g * forceControl.get_m_gx();
@@ -219,12 +225,16 @@ int main(int argc, char** argv)
 
         if (down_cal.get_start())
         {
-            up_cal.set_start(true);
+            if(!up_cal.get_start()){
+                up_cal.start_cal();
+            }
+            // up_cal.set_start(true);
             tmp = down_cal.calibrate(forceControl.downFilterreading[9]);
             up_cal.calibrate(forceControl.upFilterreading[9]);
             std_msgs::Float64 msg;
             msg.data = tmp;
-            q1 = tmp;
+            q1 = tmp*3.14159265359/180;
+            // ROS_INFO_STREAM("q: " << q1);
             exo_pub.publish(msg);
         }
         else
@@ -253,9 +263,9 @@ int main(int argc, char** argv)
             Approach 1: Roughly assume mass is placed on top of skin.
             Linear extrapolation: based on the stored calibraiton value, extrapolate sensor value for predicted mass and subtract in addition to stored value
             */
-            if(predictive){
-                Ws_down = forceControl.downFilterreading[9] - (1+(m3/m2))*down_cal.interp_force(q1*180/3.14159265359);
-            }
+            // if(predictive){
+            //     Ws_down = forceControl.downFilterreading[9] - (1+(m3/m2))*down_cal.interp_force(q1*180/3.14159265359);
+            // }
 
             /*
             Approach 2: Subtract theoretical torque of predicted mass
@@ -286,20 +296,52 @@ int main(int argc, char** argv)
             // Ws=0.0;
             if(std::abs(Ws_up) > std::abs(Ws_down)){
                 Ws = Ws_up;
+                direction = false;
+                // ROS_INFO_STREAM("Up: " << Ws);
             }
             else{
-                Ws = -Ws_down;
+                // Ws = -Ws_down;
+                if(down_cal.get_done()){
+                    // ROS_INFO_STREAM("Cal: " << down_cal.interp_force(q1*180/3.14159265359));
+                    Ws = m2*g*sin(q1)*(Ws_down)/(down_cal.interp_force(q1*180/3.14159265359));
+                    // ROS_INFO_STREAM("Down: " << Ws);
+                    // Ws = - Ws_down;
+                }
+                else{
+                    Ws = -Ws_down;
+                    // ROS_INFO_STREAM("Down: " << Ws);
+                }
+                direction = true;
+                // ROS_INFO_STREAM("Down: " << m2*g*sin(q1)*(Ws_down)/(down_cal.interp_force(q1*180/3.14159265359)));
+                // ROS_INFO_STREAM("Down: " << Ws);
             }
 
             // // call force control update
             prev_torque = tao;
-            tao = forceControl.update(Ws) + g_matrix;
+            // tao = forceControl.update(Ws) + g_matrix;
             // Approach 2: 
-            // if(predictive){
-            //     tao = tao - g*L3*m3*sin(q1);
-            // }
+            // TODO: make it work lol
+            if(predictive && direction){
+                double intention_force = forceControl.update(Ws);
+                double compensation_force = g*(L2+L3)*m3*sin(q1) * kp_down;
+                if(intention_force > compensation_force){ // less negative means less force (but means larger value)
+                    tao = g_matrix;
+                }
+                else{
+                    tao = intention_force + g_matrix - compensation_force;
+                }
+                // tao = tao - g*L3*m3*sin(q1); // minus because g has minus
+                // if(tao - g_matrix > 0){
+                //     tao = forceControl.update(0.0) + g_matrix;
+                // }
+                ROS_INFO_STREAM("Intention: " << intention_force);
+                ROS_INFO_STREAM("Compensation: " << compensation_force);
+            }
+            else{
+                tao = forceControl.update(Ws) + g_matrix;
+            }
 
-            // ROS_WARN_STREAM("tao=" << tao);
+            ROS_WARN_STREAM("tao=" << tao - g_matrix);
             // if(std::abs(tao - prev_torque) > 0.1){
             //     tao = prev_torque;
             // }
