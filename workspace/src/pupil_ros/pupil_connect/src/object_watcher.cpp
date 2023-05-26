@@ -5,6 +5,8 @@
 #include "darknet_ros_msgs/BoundingBox.h"
 #include <inttypes.h>
 #include "std_msgs/Float64.h"
+#include "experiment_srvs/MassChange.h"
+#include "geometry_msgs/Point.h"
 
 #include <sstream>
 
@@ -17,14 +19,19 @@ class ObjectEyer{
         int64_t ymin;
         int64_t ymax;
         ros::Publisher fix_object_pub;
+        ros::ServiceClient mass_client;
         ros::Publisher mass_pub;
         std::map<std::string, double> object_mass_list;
+        std::string last_object;
     public:
         ObjectEyer(ros::NodeHandle handle, std::map<std::string, double> object_list);
         void fixationCallback(const pupil_msgs::fixation::ConstPtr& fixation);
         void gazeCallback(const pupil_msgs::gaze::ConstPtr& gaze);
         void objectCallback(const darknet_ros_msgs::BoundingBoxes::ConstPtr& box);
         void sendMass(std::vector<double> gaze_norm_pos);
+        void emgCallback(const std_msgs::Float64::ConstPtr& activity);
+        void handCallback(const geometry_msgs::Point::ConstPtr& hand_pos);
+        void mass_request();
 };
 
 ObjectEyer::ObjectEyer(ros::NodeHandle handle, std::map<std::string, double> object_list)
@@ -42,20 +49,21 @@ ObjectEyer::ObjectEyer(ros::NodeHandle handle, std::map<std::string, double> obj
 
     // this->fix_object_pub = handle.advertise<darknet_ros_msgs::BoundingBoxes>("fixated_objects", 1);
     this->mass_pub = handle.advertise<std_msgs::Float64>("mass_change", 60);
+    this->mass_client = handle.serviceClient<experiment_srvs::MassChange>("change_mass");
 }
 
 void ObjectEyer::sendMass(std::vector<double> gaze_norm_pos)
 {
-    std::string object;
+    // std::string object;
     for (auto box: this->boxes){
         if ((box.xmin <= gaze_norm_pos[0]) && (gaze_norm_pos[0] <= box.xmax) && (box.ymin <= gaze_norm_pos[1]) && (gaze_norm_pos[1] <= box.ymax)){
             ROS_INFO("Gaze is on: %s", box.Class.data());
-            object.clear();
-            object = box.Class.data();
+            last_object.clear();
+            last_object = box.Class.data();
         }
     }
     std_msgs::Float64 msg;
-    msg.data = this->object_mass_list[object];
+    msg.data = this->object_mass_list[last_object];
     this->mass_pub.publish(msg);
 }
 
@@ -120,6 +128,25 @@ void ObjectEyer::objectCallback(const darknet_ros_msgs::BoundingBoxes::ConstPtr&
 
 }
 
+void ObjectEyer::emgCallback(const std_msgs::Float64::ConstPtr& activity)
+{
+    mass_request();
+}
+
+void ObjectEyer::handCallback(const geometry_msgs::Point::ConstPtr& hand_pos)
+{
+    // have toggle variable for if bounding box is touching hand or not via threshold
+    // if toggle is off and bounding box and hand position fall below threshold, toggle to on and publish mass of object
+    // if toggle is on and bounding box and position go over threshold, toggle to off and publish mass of 0
+}
+
+void ObjectEyer::mass_request()
+{
+    experiment_srvs::MassChange change_mass;
+    change_mass.request.mass.data = this->object_mass_list[this->last_object];
+    this->mass_client.call(change_mass);
+}
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "object_chooser");
@@ -133,6 +160,10 @@ int main(int argc, char **argv)
 
     bool fixation;
     ros::param::get("~fixation", fixation);
+    bool emg;
+    ros::param::get("~emg", emg);
+    bool vision;
+    ros::param::get("~vision", vision);
 
     // TODO: Should make a launch file where user can choose between gaze or fixation. Load config file for object mass relationship
     ros::Subscriber eye_sub;
@@ -146,6 +177,14 @@ int main(int argc, char **argv)
     // ros::Subscriber gaze_sub = n.subscribe("pupil_gaze", 60, &ObjectEyer::gazeCallback, &eyer);
 
     ros::Subscriber object_sub = n.subscribe("darknet_ros/bounding_boxes", 1, &ObjectEyer::objectCallback, &eyer);
+
+    if(emg){
+        ros::Subscriber emg_activity = n.subscribe("emg_activity_thresh", 1, &ObjectEyer::emgCallback, &eyer);
+    }
+
+    if(vision){
+        ros::Subscriber hand_tracker = n.subscribe("hand_position", 60, &ObjectEyer::handCallback, &eyer);
+    }
 
 
     ros::Rate r(60);

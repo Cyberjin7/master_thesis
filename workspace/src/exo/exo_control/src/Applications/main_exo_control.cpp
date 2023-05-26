@@ -324,24 +324,30 @@ int main(int argc, char** argv)
             if(predictive && direction){
                 double intention_force = forceControl.update(Ws);
                 double compensation_force = g*(L2+L3)*m3*sin(q1) * kp_down;
-                if(intention_force > compensation_force){ // less negative means less force (but means larger value)
-                    tao = g_matrix;
-                }
-                else{
-                    tao = intention_force + g_matrix - compensation_force;
-                }
+
+                // if(intention_force > compensation_force){ // less negative means less force (but means larger value)
+                //     tao = g_matrix;
+                // }
+                // else{
+                //     tao = intention_force + g_matrix - compensation_force;
+                // }
+
+                tao = intention_force + g_matrix - compensation_force;
+
                 // tao = tao - g*L3*m3*sin(q1); // minus because g has minus
                 // if(tao - g_matrix > 0){
                 //     tao = forceControl.update(0.0) + g_matrix;
                 // }
                 ROS_INFO_STREAM("Intention: " << intention_force);
                 ROS_INFO_STREAM("Compensation: " << compensation_force);
+                ROS_WARN_STREAM("Down=" << tao - g_matrix);
             }
             else{
                 tao = forceControl.update(Ws) + g_matrix;
+                ROS_WARN_STREAM("Up=" << tao - g_matrix);
             }
 
-            ROS_WARN_STREAM("tao=" << tao - g_matrix);
+            // ROS_WARN_STREAM("tao=" << tao - g_matrix);
             // if(std::abs(tao - prev_torque) > 0.1){
             //     tao = prev_torque;
             // }

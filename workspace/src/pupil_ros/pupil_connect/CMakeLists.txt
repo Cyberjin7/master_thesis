@@ -179,6 +179,7 @@ add_dependencies(${PROJECT_NAME}_obj_ident ${${PROJECT_NAME}_EXPORTED_TARGETS} $
    scripts/bag_append.py
    scripts/bag_retime.py
    scripts/bag_reorder.py
+   scripts/hand_detector.py
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
  )
 
