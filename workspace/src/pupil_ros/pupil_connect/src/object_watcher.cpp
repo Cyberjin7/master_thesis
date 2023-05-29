@@ -18,7 +18,6 @@ class ObjectEyer{
         int64_t xmax;
         int64_t ymin;
         int64_t ymax;
-        ros::Publisher fix_object_pub;
         ros::ServiceClient mass_client;
         ros::Publisher mass_pub;
         std::map<std::string, double> object_mass_list;
@@ -52,7 +51,6 @@ ObjectEyer::ObjectEyer(ros::NodeHandle handle, std::map<std::string, double> obj
 
     this->object_mass_list = object_list;
 
-    // this->fix_object_pub = handle.advertise<darknet_ros_msgs::BoundingBoxes>("fixated_objects", 1);
     this->mass_pub = handle.advertise<std_msgs::Float64>("mass_change", 60);
     this->mass_client = handle.serviceClient<experiment_srvs::MassChange>("change_mass");
 
@@ -79,39 +77,17 @@ void ObjectEyer::gazeCallback(const pupil_msgs::gaze::ConstPtr& gaze)
     this->gaze_pos[1] = 720*(1 - gaze->norm_pos.y);
     // ROS_INFO("x: %f", this->gaze_pos[0]);
     // ROS_INFO("y: %f", this->gaze_pos[1]);
-    // std::string object;
-    // for (auto box: this->boxes){
-    //     if ((box.xmin <= this->gaze_pos[0]) && (this->gaze_pos[0] <= box.xmax) && (box.ymin <= this->gaze_pos[1]) && (this->gaze_pos[1] <= box.ymax)){
-    //         ROS_INFO("Gaze is on: %s", box.Class.data());
-    //         object.clear();
-    //         object = box.Class.data();
-    //     }
-    // }
-    // std_msgs::Float64 msg;
-    // msg.data = this->object_mass_list[object];
-    // this->mass_pub.publish(msg);
+
     sendMass(this->gaze_pos);
 }
 
 void ObjectEyer::fixationCallback(const pupil_msgs::fixation::ConstPtr& fixation)
 {
-    // std::vector<double>(fixation->norm_pos.data(), fixation->norm_pos.size()*sizeof(fixation->norm_pos[0]));
-    // this->gaze_pos = {fixation->norm_pos[0]*1200, fixation->norm_pos[0]*1200};
-
     this->gaze_pos[0] = fixation->norm_pos[0]*1200;
     this->gaze_pos[1] = 720*( 1 - fixation->norm_pos[1]);
     // ROS_INFO("x: %f", this->gaze_pos[0]);
     // ROS_INFO("y: %f", this->gaze_pos[1]);
 
-    // darknet_ros_msgs::BoundingBoxes msg;
-
-    // for (auto box : this->boxes){
-    //     if ((box.xmin <= this->gaze_pos[0]) && (this->gaze_pos[0] <= box.xmax) && (box.ymin <= this->gaze_pos[1]) && (this->gaze_pos[1] <= box.ymax)){
-    //         ROS_INFO("Gaze is on: %s", box.Class.data());
-    //         msg.bounding_boxes.push_back(box);
-    //     }
-    // }
-    // this->fix_object_pub.publish(msg);
     sendMass(this->gaze_pos);
 }
 
@@ -121,7 +97,6 @@ void ObjectEyer::objectCallback(const darknet_ros_msgs::BoundingBoxes::ConstPtr&
         this->boxes.clear();
     }
 
-    // ROS_INFO("Object identified: ");
     for (auto box : boxes->bounding_boxes)
     {
         // ROS_INFO("Object: %s", box.Class.data());
@@ -201,7 +176,6 @@ int main(int argc, char **argv)
     ros::param::get("~vision_threshold", threshold);
     eyer.set_threshold(threshold);
 
-    // TODO: Should make a launch file where user can choose between gaze or fixation. Load config file for object mass relationship
     ros::Subscriber eye_sub;
     if(fixation){
         eye_sub = n.subscribe("pupil_fixation", 1, &ObjectEyer::fixationCallback, &eyer);
@@ -209,15 +183,17 @@ int main(int argc, char **argv)
     else{
         eye_sub = n.subscribe("pupil_gaze", 60, &ObjectEyer::gazeCallback, &eyer);
     }
-    // ros::Subscriber fixation_sub = n.subscribe("pupil_fixation", 1, &ObjectEyer::fixationCallback, &eyer);
-    // ros::Subscriber gaze_sub = n.subscribe("pupil_gaze", 60, &ObjectEyer::gazeCallback, &eyer);
 
     ros::Subscriber object_sub = n.subscribe("darknet_ros/bounding_boxes", 1, &ObjectEyer::objectCallback, &eyer);
+
+    if(emg && vision){
+        ROS_WARN_STREAM("Cannot use EMG and mediapipe hand tracking together. Please choose one");
+        ros::shutdown();
+    }
 
     if(emg){
         ros::Subscriber emg_activity = n.subscribe("emg_activity_thresh", 1, &ObjectEyer::emgCallback, &eyer);
     }
-
     if(vision){
         ros::Subscriber hand_tracker = n.subscribe("hand_position", 60, &ObjectEyer::handCallback, &eyer);
     }
@@ -225,7 +201,6 @@ int main(int argc, char **argv)
 
     ros::Rate r(60);
 
-    // ros::spin();
     while(ros::ok()){
         ros::spinOnce();
         r.sleep();

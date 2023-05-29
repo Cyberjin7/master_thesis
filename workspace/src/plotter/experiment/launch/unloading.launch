@@ -1,0 +1,6 @@
+<launch>
+    <node pkg="experiment" type="experiment_unloading" name="unloading_experiment" output="screen">
+        <rosparam command="load" file="$(find pupil_connect)/launch/config/objects.yaml"/>
+        <rosparam command="load" file="$(find experiment)/launch/config/unloading.yaml"/>
+    </node>
+</launch>

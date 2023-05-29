@@ -21,7 +21,7 @@ int main(int argc, char **argv)
             start_client.call(trigger);
             ros::shutdown();
         }
-        else if(usr_input.compare("q") || usr_input.compare("Q")){
+        else if(usr_input.compare("q") == 0 || usr_input.compare("Q") == 0){
             ROS_WARN_STREAM("Quit node");
             ros::shutdown();
         }

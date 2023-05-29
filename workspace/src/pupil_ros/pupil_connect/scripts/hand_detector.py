@@ -5,6 +5,7 @@ from cv_bridge import CvBridge
 import numpy as np
 import rospy
 from pupil_msgs.msg import frame
+from geometry_msgs.msg import Point
 import time
 
 mp_hands = mp.solutions.hands
@@ -14,10 +15,12 @@ class FrameSub:
 
     def __init__(self):
         self.image_sub = rospy.Subscriber('pupil_world', frame, self.callback)
+        self.hand_pub = rospy.Publisher('hand_position', Point, queue_size=60)
         self.cv_bridge = CvBridge()
         self.start_time = None
         self.tic = time.perf_counter()
         self.toc = time.perf_counter()
+        self.hand_pos = Point
 
     def callback(self, data):
         # self.tic = time.perf_counter()
@@ -55,6 +58,9 @@ class FrameSub:
                 # for num, hand in enumerate(results.multi_hand_landmarks):
                     if(results.multi_handedness[num].classification[0].label == 'Right'):
                         print('Left: ' + str(hand.landmark[0].x))
+                        self.hand_pos.x = hand.landmark[0].x
+                        self.hand_pos.y = hand.landmark[0].y
+                        self.hand_pub.publish(self.hand_pos)
                     elif(results.multi_handedness[num].classification[0].label == 'Left'):
                         print('Right: ' + str(hand.landmark[0].x))
                     # print(str(num) + ": " + str(hand.landmark[0].x))

@@ -8,3 +8,6 @@ objects:
     tvmonitor: 1.0,
     keyboard: 0.2
   }
+targets:
+  - "bottle"
+  - "cup"
