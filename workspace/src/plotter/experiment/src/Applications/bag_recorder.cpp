@@ -10,6 +10,9 @@
 #include "sync_msgs/SyncQ.h"
 #include "sync_msgs/response.h"
 #include "sync_msgs/MassData.h"
+#include "exo_msgs/state.h"
+#include "std_msgs/Float64MultiArray.h"
+#include "sync_msgs/MassTrial.h"
 
 namespace fs = std::filesystem;
 
@@ -27,11 +30,19 @@ namespace bagRecorder
         }
     }
 
-    void stateCallback(const sync_msgs::SyncQ::ConstPtr& msg)
+    void stateCallback(const exo_msgs::stateConstPtr& msg)
     {
         if(bagRecorder::record)
         {
             bagRecorder::bag.write("state", msg->header.stamp, msg);
+        }
+    }
+
+    void statesyncCallback(const sync_msgs::SyncQ::ConstPtr& msg)
+    {
+        if(bagRecorder::record)
+        {
+            bagRecorder::bag.write("state_sync", msg->header.stamp, msg);
         }
     }
 
@@ -67,6 +78,22 @@ namespace bagRecorder
         if(bagRecorder::record)
         {
             bagRecorder::bag.write("mass", ros::Time::now(), msg);
+        }
+    }
+
+    void emgCallback(const std_msgs::Float64MultiArray::ConstPtr& msg)
+    {
+        if(bagRecorder::record)
+        {
+            bagRecorder::bag.write("emg", ros::Time::now(), msg);
+        }
+    }
+
+    void massChangeCallback(const sync_msgs::MassTrial::ConstPtr& msg)
+    {
+        if(bagRecorder::record)
+        {
+            bagRecorder::bag.write("mass_change", msg->header.stamp, msg);
         }
     }
 
@@ -136,6 +163,26 @@ int main(int argc, char **argv)
     ros::param::get("~save_dir", bag_dir);
     fs::path bag_file = bagRecorder::makePath(subject, bag_dir);
 
+    bool q_sync;
+    bool q_ref_sync;
+    bool exp;
+    bool response;
+    bool state;
+    bool state_sync;
+    bool mass_trial;
+    bool emg;
+    bool mass_change;
+
+    ros::param::get("~q_sync", q_sync);
+    ros::param::get("~q_ref_sync", q_ref_sync);
+    ros::param::get("~exp", exp);
+    ros::param::get("~response", response);
+    ros::param::get("~state", state);
+    ros::param::get("~state_sync", state_sync);
+    ros::param::get("~mass_trial", mass_trial);
+    ros::param::get("~emg", emg);
+    ros::param::get("~mass_change", mass_change);
+
     int rate;
     ros::param::get("~rate", rate);
     ROS_INFO_STREAM("Rate: " << rate);
@@ -144,21 +191,42 @@ int main(int argc, char **argv)
 
     // bagRecorder::bag.open(bag_file, rosbag::bagmode::Write);
     
-    ros::Subscriber q_sub = n.subscribe("q_sync", 100, bagRecorder::qCallback);
-    ros::Subscriber ref_sub = n.subscribe("q_ref_sync", 100, bagRecorder::refCallback);
     ros::ServiceServer toggle_server = n.advertiseService<experiment_srvs::Trigger::Request, experiment_srvs::Trigger::Response>("toggle_recorder", boost::bind(bagRecorder::toggleCallback, _1, _2, bag_file));
 
-    ros::Subscriber exp_sub = n.subscribe("exp", 1, bagRecorder::expCallback);
-    ros::Subscriber response_sub = n.subscribe("response", 1, bagRecorder::responseCallback);
-    ros::Subscriber state_sub = n.subscribe("state_sync", 100, bagRecorder::stateCallback);
-    ros::Subscriber mass_sub = n.subscribe("mass_trial", 1, bagRecorder::massCallback);
+    if(q_sync){
+        ros::Subscriber q_sub = n.subscribe("q_sync", 100, bagRecorder::qCallback);
+    }
+    if(q_ref_sync){
+        ros::Subscriber ref_sub = n.subscribe("q_ref_sync", 100, bagRecorder::refCallback);
+    }
+    if(exp){
+        ros::Subscriber exp_sub = n.subscribe("exp", 1, bagRecorder::expCallback);
+    }
+    if(response){
+        ros::Subscriber response_sub = n.subscribe("response", 1, bagRecorder::responseCallback);
+    }
+    if(state){
+        ros::Subscriber state_sub = n.subscribe("state", 100, bagRecorder::stateCallback);
+    }
+    if(state_sync){
+        ros::Subscriber state_sync_sub = n.subscribe("state_sync", 100, bagRecorder::statesyncCallback);
+    }
+    if(mass_trial){
+        ros::Subscriber mass_trial_sub = n.subscribe("mass_trial", 1, bagRecorder::massCallback);
+    }
+    if(emg){
+        ros::Subscriber emg_sub = n.subscribe("emg", 100, bagRecorder::emgCallback);
+    }
+    if(mass_change){
+        ros::Subscriber mass_change_sub = n.subscribe("mass_change", 60, bagRecorder::massChangeCallback);
+    }
 
     bagRecorder::bag.open(bag_file, rosbag::bagmode::Write);
 
     while(ros::ok())
     {
         ros::spinOnce();
-        loop.sleep();
+        // loop.sleep();
     }
 
     return 0;

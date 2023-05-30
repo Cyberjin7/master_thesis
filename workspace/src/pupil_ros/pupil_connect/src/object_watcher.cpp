@@ -7,6 +7,7 @@
 #include "std_msgs/Float64.h"
 #include "experiment_srvs/MassChange.h"
 #include "geometry_msgs/Point.h"
+#include "sync_msgs/MassTrial.h"
 
 #include <sstream>
 
@@ -19,12 +20,14 @@ class ObjectEyer{
         int64_t ymin;
         int64_t ymax;
         ros::ServiceClient mass_client;
-        ros::Publisher mass_pub;
+        ros::Publisher target_pub;
+        ros::Publisher mass_change_pub;
         std::map<std::string, double> object_mass_list;
         double vision_threshold;
         bool hold;
         darknet_ros_msgs::BoundingBox target_box;
-        experiment_srvs::MassChange change_mass;
+        experiment_srvs::MassChange change_mass_request;
+        sync_msgs::MassTrial mass_change;
     public:
         ObjectEyer(ros::NodeHandle handle, std::map<std::string, double> object_list);
         void fixationCallback(const pupil_msgs::fixation::ConstPtr& fixation);
@@ -51,8 +54,9 @@ ObjectEyer::ObjectEyer(ros::NodeHandle handle, std::map<std::string, double> obj
 
     this->object_mass_list = object_list;
 
-    this->mass_pub = handle.advertise<std_msgs::Float64>("mass_change", 60);
-    this->mass_client = handle.serviceClient<experiment_srvs::MassChange>("change_mass");
+    this->target_pub = handle.advertise<std_msgs::Float64>("target", 60);
+    this->mass_change_pub = handle.advertise<sync_msgs::MassTrial>("mass_change", 60);
+    this->mass_client = handle.serviceClient<experiment_srvs::MassChange>("change_mass_request");
 
     this->hold = false;
 }
@@ -68,7 +72,7 @@ void ObjectEyer::sendMass(std::vector<double> gaze_pos)
     }
     std_msgs::Float64 msg;
     msg.data = this->object_mass_list[this->target_box.Class.data()];
-    this->mass_pub.publish(msg);
+    this->target_pub.publish(msg);
 }
 
 void ObjectEyer::gazeCallback(const pupil_msgs::gaze::ConstPtr& gaze)
@@ -124,6 +128,7 @@ void ObjectEyer::handCallback(const geometry_msgs::Point::ConstPtr& hand_pos)
     if(!this->hold){
         if((pos_x >= this->target_box.xmin) && (pos_x <= this->target_box.xmax) && (pos_y <= this->target_box.ymax)){
             if(this->target_box.ymax - pos_y < this->vision_threshold){
+                ROS_INFO_STREAM("Holding object");
                 this->hold = true;
                 this->mass_request(this->target_box.Class.data());
             }
@@ -131,6 +136,7 @@ void ObjectEyer::handCallback(const geometry_msgs::Point::ConstPtr& hand_pos)
     }
     else{
         if((pos_y <= this->target_box.ymax)&&(this->target_box.ymax - pos_y > this->vision_threshold)){
+            ROS_INFO_STREAM("Not holding object");
             this->hold = false;
             this->mass_request(0.0);
         }
@@ -139,14 +145,22 @@ void ObjectEyer::handCallback(const geometry_msgs::Point::ConstPtr& hand_pos)
 
 void ObjectEyer::mass_request(std::string target_object)
 {
-    this->change_mass.request.mass.data = this->object_mass_list[target_object];
-    this->mass_client.call(this->change_mass);
+    this->change_mass_request.request.mass.data = this->object_mass_list[target_object];
+    this->mass_client.call(this->change_mass_request);
+    this->mass_change.header.stamp = ros::Time::now();
+    this->mass_change.object = target_object;
+    this->mass_change.mass = this->object_mass_list[target_object];
+    this->mass_change_pub.publish(this->mass_change);
 }
 
 void ObjectEyer::mass_request(double target_mass)
 {
-    this->change_mass.request.mass.data = target_mass;
-    this->mass_client.call(this->change_mass);
+    this->change_mass_request.request.mass.data = target_mass;
+    this->mass_client.call(this->change_mass_request);
+    this->mass_change.header.stamp = ros::Time::now();
+    this->mass_change.object = "NONE";
+    this->mass_change.mass = 0.0;
+    this->mass_change_pub.publish(this->mass_change);
 }
 
 void ObjectEyer::set_threshold(double threshold_value)

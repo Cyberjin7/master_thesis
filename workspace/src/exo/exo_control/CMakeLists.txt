@@ -140,6 +140,7 @@ add_dependencies(ExoControllers
 set(APP_TARGETS
   exo_control
   exo_cal_starter
+  exo_input_manager
 )
 
 foreach(target ${APP_TARGETS})

@@ -39,6 +39,13 @@ bool start_cal(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res, Ex
     return true;
 }
 
+void externalCallback(const std_msgs::Float64::ConstPtr &msg, double *kp)
+{
+    ROS_INFO_STREAM("Received: " << msg->data);
+    *kp = msg->data;
+    ROS_INFO_STREAM("External Kp changed to: " << *kp);
+}
+
 int main(int argc, char** argv)
 {
     // int f = 200;
@@ -190,8 +197,9 @@ int main(int argc, char** argv)
     ros::Publisher up_pub = n.advertise<std_msgs::Float64>("up", 100);
     ros::Publisher down_pub = n.advertise<std_msgs::Float64>("down", 100);
 
+    ros::Subscriber kp_sub = n.subscribe<std_msgs::Float64>("external_kp", 1, boost::bind(externalCallback, _1, &kp_down));
 
-    ros::ServiceServer mass_serv = n.advertiseService<experiment_srvs::MassChange::Request,experiment_srvs::MassChange::Response>("change_mass", boost::bind(change_mass, _1, _2, &m3));
+    ros::ServiceServer mass_serv = n.advertiseService<experiment_srvs::MassChange::Request,experiment_srvs::MassChange::Response>("change_mass_request", boost::bind(change_mass, _1, _2, &m3));
     ros::ServiceServer cal_serv = n.advertiseService<std_srvs::Empty::Request,std_srvs::Empty::Response>("cal_trigger", boost::bind(start_cal, _1, _2, &down_cal));
 
     std_msgs::Float64 torque_msg;
@@ -338,13 +346,13 @@ int main(int argc, char** argv)
                 // if(tao - g_matrix > 0){
                 //     tao = forceControl.update(0.0) + g_matrix;
                 // }
-                ROS_INFO_STREAM("Intention: " << intention_force);
-                ROS_INFO_STREAM("Compensation: " << compensation_force);
-                ROS_WARN_STREAM("Down=" << tao - g_matrix);
+                // ROS_INFO_STREAM("Intention: " << intention_force);
+                // ROS_INFO_STREAM("Compensation: " << compensation_force);
+                // ROS_WARN_STREAM("Down=" << tao - g_matrix);
             }
             else{
                 tao = forceControl.update(Ws) + g_matrix;
-                ROS_WARN_STREAM("Up=" << tao - g_matrix);
+                // ROS_WARN_STREAM("Up=" << tao - g_matrix);
             }
 
             // ROS_WARN_STREAM("tao=" << tao - g_matrix);
@@ -388,6 +396,7 @@ int main(int argc, char** argv)
         q_state.qdd = qdd1 * 180 / 3.14159265359;
         pub_q_state.publish(q_state);
 
+        state.header.stamp = ros::Time::now();
         state.q_state.q = q1 * 180 / 3.14159265359;
         state.q_state.qd = qd1 * 180 / 3.14159265359;
         state.q_state.qdd = qdd1 * 180 / 3.14159265359;

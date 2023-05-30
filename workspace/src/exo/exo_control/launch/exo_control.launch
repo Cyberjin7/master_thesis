@@ -10,6 +10,6 @@
   <rosparam command="load" file="$(find experiment)/launch/config/exp_param.yaml"/>
   <param name="predictive_wrench" value="$(arg PREDICTIVE)" type="bool" />
   </node>
-<node name="exo_calibration" pkg="exo_control" type="exo_cal_starter" output="screen"/>
+<node name="exo_calibration" pkg="exo_control" type="exo_input_manager" output="screen"/>
 
 </launch>

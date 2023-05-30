@@ -1,6 +1,6 @@
 #include "ros/ros.h"
 #include <random>
-
+#include "sync_msgs/MassTrial.h"
 
 int main(int argc, char **argv)
 {
@@ -8,8 +8,10 @@ int main(int argc, char **argv)
     ros::NodeHandle n;
 
     std::vector<std::string> targets;
+    std::map<std::string, double> objects;
 
     ros::param::get("~/targets", targets);
+    ros::param::get("~/objects", objects);
 
     int trial_size;
     int block_size;
@@ -46,10 +48,40 @@ int main(int argc, char **argv)
         
     }
 
+    std::vector<std::string>::iterator ptr = trials.begin();
 
+    ros::Publisher trial_pub = n.advertise<sync_msgs::MassTrial>("trial", 1);
+
+    sync_msgs::MassTrial trial_msg;
+
+    std::string usr_input;
 
     while(ros::ok()){
-
+        ROS_INFO_STREAM("Press [ENTER] to iterate trial.");
+        //std::cin >> usr_input;
+        std::getline(std::cin, usr_input);
+        
+        if(usr_input.empty()){
+            // ROS_INFO_STREAM("Iterating");
+            // ros::shutdown();
+            ROS_INFO_STREAM("Object: " << *ptr);
+            ROS_INFO_STREAM("Mass: " << objects[*ptr]);
+            if(ptr<trials.end()-1){
+                trial_msg.header.stamp = ros::Time::now();
+                trial_msg.object = *ptr;
+                trial_msg.mass = objects[*ptr];
+                trial_pub.publish(trial_msg);
+                ptr++;
+            }
+            else{
+                ROS_INFO_STREAM("Last trial.");
+                ros::shutdown();
+            }
+        }
+        else if(usr_input.compare("q") == 0 || usr_input.compare("Q") == 0){
+            ROS_WARN_STREAM("Quit node");
+            ros::shutdown();
+        }
     }
 
     return 0;

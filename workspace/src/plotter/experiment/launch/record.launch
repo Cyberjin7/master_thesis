@@ -1,9 +1,27 @@
 <launch>
     <arg name="DIR" default="$(find experiment)/launch/bag/test"/>
     <arg name="SUBJECT" default="henlo"/>
+    <arg name="Q_SYNC" default="false"/>
+    <arg name="Q_REF_SYNC" default="false"/>
+    <arg name="EXP" default="false"/>
+    <arg name="RESPONSE" default="false"/>
+    <arg name="STATE" default="false"/>
+    <arg name="STATE_SYNC" default="false"/>
+    <arg name="MASS_TRIAL" default="false"/>
+    <arg name="EMG" default="false"/>
+    <arg name="MASS_CHANGE" default="false"/>
     <node pkg="experiment" type="experiment_recorder" name="bag_recorder" output="screen"> 
-        <param  name="save_dir" value="$(arg DIR)" type="str"/>
-        <param  name="subject" value="$(arg SUBJECT)" type="str"/>
+        <param  name="save_dir" value="$(arg DIR)" type="bool"/>
+        <param  name="subject" value="$(arg SUBJECT)" type="bool"/>
+        <param name="q_sync" value="$(arg Q_SYNC)" type="bool"/>
+        <param name="q_ref_sync" value="$(arg Q_REF_SYNC)" type="bool"/>
+        <param name="exp" value="$(arg EXP)" type="bool"/>
+        <param name="response" value="$(arg RESPONSE)" type="bool"/>
+        <param name="state" value="$(arg STATE)" type="bool"/>
+        <param name="state_sync" value="$(arg STATE_SYNC)" type="bool"/>
+        <param name="mass_trial" value="$(arg MASS_TRIAL)" type="bool"/>
+        <param name="emg" value="$(arg EMG)"  type="bool"/>
+        <param name="mass_change" value="$(arg MASS_CHANGE)" type="bool"/>
         <rosparam command="load" file="$(find experiment)/launch/config/exp_param.yaml"/>
     </node>
 </launch>
