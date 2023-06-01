@@ -1,0 +1,2 @@
+geometry_msgs/Point wrist_pos
+geometry_msgs/Point mft_pos

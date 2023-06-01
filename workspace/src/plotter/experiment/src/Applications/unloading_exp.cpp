@@ -1,6 +1,7 @@
 #include "ros/ros.h"
 #include <random>
 #include "sync_msgs/MassTrial.h"
+#include "experiment_srvs/Trigger.h"
 
 int main(int argc, char **argv)
 {
@@ -51,8 +52,11 @@ int main(int argc, char **argv)
     std::vector<std::string>::iterator ptr = trials.begin();
 
     ros::Publisher trial_pub = n.advertise<sync_msgs::MassTrial>("trial", 1);
+    ros::ServiceClient start_client = n.serviceClient<experiment_srvs::Trigger>("toggle_recorder");
 
     sync_msgs::MassTrial trial_msg;
+
+    experiment_srvs::Trigger trigger;
 
     std::string usr_input;
 
@@ -62,11 +66,25 @@ int main(int argc, char **argv)
         std::getline(std::cin, usr_input);
         
         if(usr_input.empty()){
+            if(ptr == trials.begin()){
+                trigger.request.header.stamp = ros::Time::now();
+                trigger.request.trigger.data = true;
+                start_client.call(trigger);
+                ROS_INFO_STREAM("Start recording");
+            }
+            else if(ptr == trials.end()){
+                trigger.request.header.stamp = ros::Time::now();
+                trigger.request.trigger.data = false;
+                start_client.call(trigger);
+                ROS_INFO_STREAM("Stop recording");
+                ros::shutdown();
+                break;
+            }
             // ROS_INFO_STREAM("Iterating");
             // ros::shutdown();
             ROS_INFO_STREAM("Object: " << *ptr);
             ROS_INFO_STREAM("Mass: " << objects[*ptr]);
-            if(ptr<trials.end()-1){
+            if(ptr<trials.end()){
                 trial_msg.header.stamp = ros::Time::now();
                 trial_msg.object = *ptr;
                 trial_msg.mass = objects[*ptr];
@@ -75,7 +93,7 @@ int main(int argc, char **argv)
             }
             else{
                 ROS_INFO_STREAM("Last trial.");
-                ros::shutdown();
+                // ros::shutdown();
             }
         }
         else if(usr_input.compare("q") == 0 || usr_input.compare("Q") == 0){

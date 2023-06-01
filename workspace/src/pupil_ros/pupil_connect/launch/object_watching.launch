@@ -1,8 +1,8 @@
 <launch>
-    <arg name="FIXATION" default="false"/>
+    <arg name="FIXATION" default="true"/>
     <arg name="EMG" default="false"/>
     <arg name="VISION" default="true"/>
-    <arg name="VISION_THRESHOLD" default="10"/>  
+    <arg name="VISION_THRESHOLD" default="150"/>  
     <node name="object_tracker" pkg="pupil_connect" type="pupil_connect_obj_ident" output="screen">
         <rosparam file="$(find pupil_connect)/launch/config/objects.yaml" command="load"/>
         <param name="fixation" value="$(arg FIXATION)" type="bool" />

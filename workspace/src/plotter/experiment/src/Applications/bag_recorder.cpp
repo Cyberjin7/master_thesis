@@ -193,32 +193,51 @@ int main(int argc, char **argv)
     
     ros::ServiceServer toggle_server = n.advertiseService<experiment_srvs::Trigger::Request, experiment_srvs::Trigger::Response>("toggle_recorder", boost::bind(bagRecorder::toggleCallback, _1, _2, bag_file));
 
+    ros::Subscriber q_sub;
+    ros::Subscriber ref_sub;
+    ros::Subscriber exp_sub;
+    ros::Subscriber response_sub;
+    ros::Subscriber state_sub;
+    ros::Subscriber state_sync_sub;
+    ros::Subscriber mass_trial_sub; 
+    ros::Subscriber emg_sub;
+    ros::Subscriber mass_change_sub;
+
     if(q_sync){
-        ros::Subscriber q_sub = n.subscribe("q_sync", 100, bagRecorder::qCallback);
+        q_sub = n.subscribe("q_sync", 100, bagRecorder::qCallback);
+        ROS_INFO_STREAM("Subbed to: q_sync");
     }
     if(q_ref_sync){
-        ros::Subscriber ref_sub = n.subscribe("q_ref_sync", 100, bagRecorder::refCallback);
+        ref_sub = n.subscribe("q_ref_sync", 100, bagRecorder::refCallback);
+        ROS_INFO_STREAM("Subbed to: q_ref_sync");
     }
     if(exp){
-        ros::Subscriber exp_sub = n.subscribe("exp", 1, bagRecorder::expCallback);
+        exp_sub = n.subscribe("exp", 1, bagRecorder::expCallback);
+        ROS_INFO_STREAM("Subbed to: exp");
     }
     if(response){
-        ros::Subscriber response_sub = n.subscribe("response", 1, bagRecorder::responseCallback);
+        response_sub = n.subscribe("response", 1, bagRecorder::responseCallback);
+        ROS_INFO_STREAM("Subbed to: response");
     }
     if(state){
-        ros::Subscriber state_sub = n.subscribe("state", 100, bagRecorder::stateCallback);
+        state_sub = n.subscribe("state", 100, bagRecorder::stateCallback);
+        ROS_INFO_STREAM("Subbed to: state");
     }
     if(state_sync){
-        ros::Subscriber state_sync_sub = n.subscribe("state_sync", 100, bagRecorder::statesyncCallback);
+        state_sync_sub = n.subscribe("state_sync", 100, bagRecorder::statesyncCallback);
+        ROS_INFO_STREAM("Subbed to: state_sync");
     }
     if(mass_trial){
-        ros::Subscriber mass_trial_sub = n.subscribe("mass_trial", 1, bagRecorder::massCallback);
+        mass_trial_sub = n.subscribe("mass_trial", 1, bagRecorder::massCallback);
+        ROS_INFO_STREAM("Subbed to: mass_trial");
     }
     if(emg){
-        ros::Subscriber emg_sub = n.subscribe("emg", 100, bagRecorder::emgCallback);
+        emg_sub = n.subscribe("emg_data", 100, bagRecorder::emgCallback);
+        ROS_INFO_STREAM("Subbed to: emg_data");
     }
     if(mass_change){
-        ros::Subscriber mass_change_sub = n.subscribe("mass_change", 60, bagRecorder::massChangeCallback);
+        mass_change_sub = n.subscribe("mass_change", 60, bagRecorder::massChangeCallback);
+        ROS_INFO_STREAM("Subbed to: mass_change");
     }
 
     bagRecorder::bag.open(bag_file, rosbag::bagmode::Write);

@@ -1,5 +1,5 @@
-trials: 20
+trials: 10
 block: 5
 targets:
   - "bottle"
-  - "cup"
+  # - "cup"

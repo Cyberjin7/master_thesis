@@ -1,0 +1,5 @@
+<launch>
+    <include file="$(find pupil_connect)/launch/pupil_stream.launch"/>
+    <include file="$(find darknet_ros)/launch/yolo_v3.launch"/>
+    <!-- <include file="$(find pupil_connect)/launch/object_watching.launch"/> -->
+</launch>

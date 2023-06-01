@@ -309,7 +309,7 @@ int main(int argc, char** argv)
             }
             else{
                 // Ws = -Ws_down;
-                if(down_cal.get_done()){
+                if(down_cal.get_done() && predictive){
                     // ROS_INFO_STREAM("Cal: " << down_cal.interp_force(q1*180/3.14159265359));
                     Ws = m2*g*sin(q1)*(Ws_down)/(down_cal.interp_force(q1*180/3.14159265359));
                     // ROS_INFO_STREAM("Down: " << Ws);
@@ -330,8 +330,10 @@ int main(int argc, char** argv)
             // Approach 2: 
             // TODO: make it work lol
             if(predictive && direction){
-                double intention_force = forceControl.update(Ws);
-                double compensation_force = g*(L2+L3)*m3*sin(q1) * kp_down;
+                double intention_force = forceControl.update(Ws)* kp_down;
+                double compensation_force = g*(L2+L3)*m3*sin(q1); // * kp_down;
+                ROS_INFO_STREAM("Down Ws: " << intention_force);
+                ROS_INFO_STREAM("Compensation: " << compensation_force);
 
                 // if(intention_force > compensation_force){ // less negative means less force (but means larger value)
                 //     tao = g_matrix;

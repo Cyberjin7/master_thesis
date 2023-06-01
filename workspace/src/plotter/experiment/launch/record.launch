@@ -1,6 +1,6 @@
 <launch>
-    <arg name="DIR" default="$(find experiment)/launch/bag/test"/>
-    <arg name="SUBJECT" default="henlo"/>
+    <arg name="DIR" default="$(find experiment)/launch/bag/unloading"/>
+    <arg name="SUBJECT" default="test"/>
     <arg name="Q_SYNC" default="false"/>
     <arg name="Q_REF_SYNC" default="false"/>
     <arg name="EXP" default="false"/>
@@ -11,8 +11,8 @@
     <arg name="EMG" default="false"/>
     <arg name="MASS_CHANGE" default="false"/>
     <node pkg="experiment" type="experiment_recorder" name="bag_recorder" output="screen"> 
-        <param  name="save_dir" value="$(arg DIR)" type="bool"/>
-        <param  name="subject" value="$(arg SUBJECT)" type="bool"/>
+        <param  name="save_dir" value="$(arg DIR)" type="string"/>
+        <param  name="subject" value="$(arg SUBJECT)" type="string"/>
         <param name="q_sync" value="$(arg Q_SYNC)" type="bool"/>
         <param name="q_ref_sync" value="$(arg Q_REF_SYNC)" type="bool"/>
         <param name="exp" value="$(arg EXP)" type="bool"/>
