@@ -25,7 +25,7 @@ force_ctrl:
   kd_down: 0.0
 
 compensation_ctrl:
-  kp_down: 0.5
+  kp_down: 0.1
 
 calibration:
   interval: 10.0

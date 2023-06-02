@@ -60,6 +60,12 @@ int main(int argc, char** argv)
     // ros::Publisher pub_q_state = n.advertise<std_msgs::Float64>("q", 100);
     // ros::Publisher pub_q_des = n.advertise<exo_control::q>("/q_des", 1);
     // ros::Publisher pub_q_intention = n.advertise<std_msgs::Float64>("/q_intention", 1);
+
+    ros::Publisher ws_pub = n.advertise<std_msgs::Float64>("Ws", 100);
+    ros::Publisher ws_N_pub = n.advertise<std_msgs::Float64>("Ws_N", 100);
+    ros::Publisher intention_pub = n.advertise<std_msgs::Float64>("intention_force", 100);
+    ros::Publisher compensation_pub = n.advertise<std_msgs::Float64>("compensation", 100);
+
     int f;
     ros::param::get("~rate", f);
     ROS_INFO_STREAM("Rate: " << f);
@@ -213,6 +219,11 @@ int main(int argc, char** argv)
 
     bool direction = true; // up is false, down is true
 
+    std_msgs::Float64 ws_msg;
+    std_msgs::Float64 ws_N_msg;
+    std_msgs::Float64 intention_msg;
+    std_msgs::Float64 compensation_msg;
+
     while (ros::ok())
     {
         gx = g * forceControl.get_m_gx();
@@ -332,8 +343,19 @@ int main(int argc, char** argv)
             if(predictive && direction){
                 double intention_force = forceControl.update(Ws)* kp_down;
                 double compensation_force = g*(L2+L3)*m3*sin(q1); // * kp_down;
-                ROS_INFO_STREAM("Down Ws: " << intention_force);
-                ROS_INFO_STREAM("Compensation: " << compensation_force);
+                // ROS_INFO_STREAM("Ws: " << Ws);
+                // ROS_INFO_STREAM("Down Ws: " << intention_force);
+                // ROS_INFO_STREAM("Compensation: " << compensation_force);
+
+                ws_msg.data = Ws_down; 
+                ws_N_msg.data = Ws;
+                intention_msg.data = intention_force;
+                compensation_msg.data = compensation_force;
+
+                ws_pub.publish(ws_msg);
+                ws_N_pub.publish(ws_N_msg);
+                intention_pub.publish(intention_msg);
+                compensation_pub.publish(compensation_msg);
 
                 // if(intention_force > compensation_force){ // less negative means less force (but means larger value)
                 //     tao = g_matrix;

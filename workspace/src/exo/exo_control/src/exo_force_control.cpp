@@ -163,7 +163,7 @@ namespace ExoControllers{
         // contracctio only slightly visible
         // 8.2 and 13.2 most useful overall
         // 13.0 and 8.0?
-        m_f_lower = msg->data[0].force[2];
+        m_f_lower = msg->data[0].force[0]; // 2 is most sensitive but not in the best position. Trying out 0
         // ROS_INFO_STREAM("Callback f_lower: " << m_f_lower);
         for (auto cell: msg->data)
         {
