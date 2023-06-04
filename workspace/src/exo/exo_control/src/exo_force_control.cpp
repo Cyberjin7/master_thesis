@@ -148,7 +148,7 @@ namespace ExoControllers{
                 double up_filtered = upFilterreading[9];
                 std_msgs::Float64 force_msg;
                 force_msg.data = up_filtered;
-                // up_pub.publish(force_msg);
+                up_pub.publish(force_msg);
             }
         }
     }
@@ -197,7 +197,7 @@ namespace ExoControllers{
                 double down_filtered = downFilterreading[9];
                 std_msgs::Float64 force_msg;
                 force_msg.data = down_filtered;
-                // down_pub.publish(force_msg);
+                down_pub.publish(force_msg);
             }
 
         }

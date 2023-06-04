@@ -43,7 +43,7 @@ namespace ExoControllers{
         else{
             if(ros::Time::now() - t > this->interval_duration){
                 auto const count = static_cast<float>(this->temp_vals.size());
-                ROS_INFO_STREAM("Average Force is: " << std::reduce(this->temp_vals.begin(), this->temp_vals.end())/count);
+                // ROS_INFO_STREAM("Average Force is: " << std::reduce(this->temp_vals.begin(), this->temp_vals.end())/count);
                 this->cal_values.insert_or_assign(this->cal_angles[this->intv_iter], std::reduce(this->temp_vals.begin(), this->temp_vals.end())/count);
                 ROS_INFO_STREAM("Finished recording for: " << this->cal_angles[this->intv_iter]);
                 ROS_INFO_STREAM("Value is: " << this->cal_values[this->cal_angles[this->intv_iter]]);
@@ -55,7 +55,7 @@ namespace ExoControllers{
                     else{
                         ROS_INFO_STREAM("Calibration finished");
                         this->start = false;
-                        this->intv_iter = 0;
+                        this->intv_iter = this->cal_angles.size()-1;
                         this->done = true;
                     }
                     t = ros::Time::now();
@@ -160,5 +160,6 @@ namespace ExoControllers{
         this->set_start(true);
         this->set_done(false);
         this->t = ros::Time::now();
+        this->intv_iter = 0;
     }
 }

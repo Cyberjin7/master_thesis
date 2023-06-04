@@ -5,10 +5,10 @@ m2: 1.5
 m3: 0.0
 b1: 0.5
 k1: 2.3
-theta1: 100.0
+theta1: 90.0
 I233: 0.013
 g: -9.81
-min: 10.0
+min: 30.0
 max: 100.0
 
 pos_ctrl:
@@ -23,6 +23,7 @@ force_ctrl:
   ki_down: 2.0
   kd_up: 0.0
   kd_down: 0.0
+  tau_lim: 2.5
 
 compensation_ctrl:
   kp_down: 0.1

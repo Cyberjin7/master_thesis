@@ -16,10 +16,10 @@ double deg2rad(double degree) {
 }
 
 
-void checkRange(double& q1, double& qd1, double& qdd1) {
-    if (q1 > deg2rad(100) || q1 < deg2rad(10)) {
-        if (q1 > deg2rad(100)) q1 = deg2rad(100); 
-        if (q1 < deg2rad(10))  q1 = deg2rad(10);
+void checkRange(double& q1, double& qd1, double& qdd1, double min, double max) {
+    if (q1 > deg2rad(max) || q1 < deg2rad(min)) {
+        if (q1 > deg2rad(max)) q1 = deg2rad(max); 
+        if (q1 < deg2rad(min))  q1 = deg2rad(min);
         qd1 = 0;
         qdd1 = 0;
     }
@@ -65,6 +65,7 @@ int main(int argc, char** argv)
     ros::Publisher ws_N_pub = n.advertise<std_msgs::Float64>("Ws_N", 100);
     ros::Publisher intention_pub = n.advertise<std_msgs::Float64>("intention_force", 100);
     ros::Publisher compensation_pub = n.advertise<std_msgs::Float64>("compensation", 100);
+    ros::Publisher down_calibration_pub = n.advertise<std_msgs::Float64>("down_cal", 100);
 
     int f;
     ros::param::get("~rate", f);
@@ -136,6 +137,9 @@ int main(int argc, char** argv)
 
     double kp_down;
     ros::param::get("~compensation_ctrl/kp_down", kp_down);
+
+    double torque_limit;
+    ros::param::get("~force_ctrl/tau_lim", torque_limit);
 
     double interval;
     ros::param::get("~calibration/interval", interval);
@@ -223,6 +227,7 @@ int main(int argc, char** argv)
     std_msgs::Float64 ws_N_msg;
     std_msgs::Float64 intention_msg;
     std_msgs::Float64 compensation_msg;
+    std_msgs::Float64 down_cal_msg;
 
     while (ros::ok())
     {
@@ -252,9 +257,12 @@ int main(int argc, char** argv)
             up_cal.calibrate(forceControl.upFilterreading[9]);
             std_msgs::Float64 msg;
             msg.data = tmp;
-            q1 = tmp*3.14159265359/180;
+            // q1 = tmp*3.14159265359/180;
+            q1 = deg2rad(tmp);
             // ROS_INFO_STREAM("q: " << q1);
             exo_pub.publish(msg);
+            qd1 = 0;
+            qdd1 = 0;
         }
         else
         {
@@ -323,6 +331,8 @@ int main(int argc, char** argv)
                 if(down_cal.get_done() && predictive){
                     // ROS_INFO_STREAM("Cal: " << down_cal.interp_force(q1*180/3.14159265359));
                     Ws = m2*g*sin(q1)*(Ws_down)/(down_cal.interp_force(q1*180/3.14159265359));
+                    down_cal_msg.data = down_cal.interp_force(q1*180/3.14159265359);
+                    down_calibration_pub.publish(down_cal_msg);
                     // ROS_INFO_STREAM("Down: " << Ws);
                     // Ws = - Ws_down;
                 }
@@ -399,7 +409,7 @@ int main(int argc, char** argv)
             //     q1 = prev_q;
             // }
             
-            checkRange(q1, qd1, qdd1);
+            checkRange(q1, qd1, qdd1, min_angle, max_angle);
 
             std_msgs::Float64 msg;
             msg.data = q1 * 180 / 3.14159265359;
