@@ -8,5 +8,8 @@
         <arg name="STATE" value="true"/>
         <arg name="MASS_CHANGE" value="true"/>
         <arg name="EMG" value="true"/>
+        <arg name="CALIBRATION" value="true"/>
+        <arg name="COMPENSATION" value="true"/>
+        <arg name="INTENTION" value="true"/>
     </include>
 </launch>

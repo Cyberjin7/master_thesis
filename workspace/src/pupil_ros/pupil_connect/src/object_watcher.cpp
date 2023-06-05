@@ -251,7 +251,7 @@ void ObjectEyer::assess_hold()
         //         this->mass_request(this->target_box.Class.data());
         //     }
         // }
-        if(within_x(this->target_box.xmin, this->target_box.xmax, this->wrist_pos[0]) && within_y(this->mft_pos[1], this->wrist_pos[1], this->target_box.ymax)){
+        if(within_y(this->mft_pos[1], this->wrist_pos[1], this->target_box.ymax)){
             ROS_INFO_STREAM("Holding " << this->target_box.Class.data());
             this->hold = true;
             this->holding_box = this->target_box;

@@ -2,6 +2,7 @@
 <launch>
 
 <arg name="PREDICTIVE" default="false"/>
+<arg name="CHEAT" default="false"/>
 <node name="exo_control"
           pkg="exo_control"
           type="exo_control"
@@ -9,6 +10,7 @@
   <rosparam file="$(find exo_control)/launch/configs/control_params.yaml" command="load"/>
   <rosparam command="load" file="$(find experiment)/launch/config/exp_param.yaml"/>
   <param name="predictive_wrench" value="$(arg PREDICTIVE)" type="bool" />
+  <param name="cheat" value="$(arg CHEAT)" type="bool" />
   </node>
 <node name="exo_calibration" pkg="exo_control" type="exo_input_manager" output="screen"/>
 

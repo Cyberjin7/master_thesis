@@ -13,6 +13,7 @@
 #include "exo_msgs/state.h"
 #include "std_msgs/Float64MultiArray.h"
 #include "sync_msgs/MassTrial.h"
+#include "std_msgs/Float64.h"
 
 namespace fs = std::filesystem;
 
@@ -20,6 +21,30 @@ namespace bagRecorder
 {
     rosbag::Bag bag;
     bool record;
+
+    void compensationCallback(const std_msgs::Float64::ConstPtr& msg)
+    {
+        if(bagRecorder::record)
+        {
+            bagRecorder::bag.write("compensation", ros::Time::now(), msg);
+        }
+    }
+
+    void intentionCallback(const std_msgs::Float64::ConstPtr& msg)
+    {
+        if(bagRecorder::record)
+        {
+            bagRecorder::bag.write("intention", ros::Time::now(), msg);
+        }
+    }
+
+    void calibrationCallback(const std_msgs::Float64::ConstPtr& msg)
+    {
+        if(bagRecorder::record)
+        {
+            bagRecorder::bag.write("calibration", ros::Time::now(), msg);
+        }
+    }
 
     void qCallback(const sync_msgs::CustomData::ConstPtr& msg)
     {
@@ -81,11 +106,11 @@ namespace bagRecorder
         }
     }
 
-    void emgCallback(const std_msgs::Float64MultiArray::ConstPtr& msg)
+    void emgCallback(const std_msgs::Float64::ConstPtr& msg)
     {
         if(bagRecorder::record)
         {
-            bagRecorder::bag.write("emg", ros::Time::now(), msg);
+            bagRecorder::bag.write("emg_rms", ros::Time::now(), msg);
         }
     }
 
@@ -172,6 +197,9 @@ int main(int argc, char **argv)
     bool mass_trial;
     bool emg;
     bool mass_change;
+    bool calibration;
+    bool compensation;
+    bool intention;
 
     ros::param::get("~q_sync", q_sync);
     ros::param::get("~q_ref_sync", q_ref_sync);
@@ -182,6 +210,9 @@ int main(int argc, char **argv)
     ros::param::get("~mass_trial", mass_trial);
     ros::param::get("~emg", emg);
     ros::param::get("~mass_change", mass_change);
+    ros::param::get("~calibration", calibration);
+    ros::param::get("~intention", compensation);
+    ros::param::get("~intention", intention);
 
     int rate;
     ros::param::get("~rate", rate);
@@ -202,6 +233,9 @@ int main(int argc, char **argv)
     ros::Subscriber mass_trial_sub; 
     ros::Subscriber emg_sub;
     ros::Subscriber mass_change_sub;
+    ros::Subscriber calibration_sub;
+    ros::Subscriber compensation_sub;
+    ros::Subscriber intention_sub;
 
     if(q_sync){
         q_sub = n.subscribe("q_sync", 100, bagRecorder::qCallback);
@@ -232,12 +266,24 @@ int main(int argc, char **argv)
         ROS_INFO_STREAM("Subbed to: mass_trial");
     }
     if(emg){
-        emg_sub = n.subscribe("emg_data", 100, bagRecorder::emgCallback);
+        emg_sub = n.subscribe("rms_samples", 100, bagRecorder::emgCallback);
         ROS_INFO_STREAM("Subbed to: emg_data");
     }
     if(mass_change){
         mass_change_sub = n.subscribe("mass_change", 60, bagRecorder::massChangeCallback);
         ROS_INFO_STREAM("Subbed to: mass_change");
+    }
+    if(calibration){
+        calibration_sub = n.subscribe("down_cal", 100, bagRecorder::calibrationCallback);
+        ROS_INFO_STREAM("Subbed to: down_cal");
+    }
+    if(compensation){
+        compensation_sub = n.subscribe("compensation", 100, bagRecorder::compensationCallback);
+        ROS_INFO_STREAM("Subbed to: calibration");
+    }
+    if(intention){
+        intention_sub = n.subscribe("intention", 100, bagRecorder::intentionCallback);
+        ROS_INFO_STREAM("Subbed to: intention");
     }
 
     bagRecorder::bag.open(bag_file, rosbag::bagmode::Write);

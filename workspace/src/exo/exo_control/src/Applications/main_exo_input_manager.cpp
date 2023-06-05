@@ -8,6 +8,8 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "input_manager");
     ros::NodeHandle n;
     ros::ServiceClient start_client = n.serviceClient<std_srvs::Empty>("cal_trigger");
+    ros::ServiceClient pred_client = n.serviceClient<std_srvs::Empty>("predictive_toggle");
+    ros::ServiceClient cheat_client = n.serviceClient<std_srvs::Empty>("cheat_toggle");
     ros::Publisher comp_pub = n.advertise<std_msgs::Float64>("external_kp", 1);
 
     std::string usr_input;
@@ -30,6 +32,14 @@ int main(int argc, char **argv)
         else if(usr_input.compare("q") == 0 || usr_input.compare("Q") == 0){
             ROS_WARN_STREAM("Quit node");
             ros::shutdown();
+        }
+        else if(usr_input.compare("predictive") == 0 || usr_input.compare("p") == 0){
+            ROS_WARN_STREAM("Toggle predictive");
+            pred_client.call(trigger);
+        }
+        else if(usr_input.compare("cheat") == 0 || usr_input.compare("c") == 0){
+            ROS_WARN_STREAM("Toggle cheat");
+            cheat_client.call(trigger);
         }
         else{
             external_kp.data = std::atof(usr_input.c_str());

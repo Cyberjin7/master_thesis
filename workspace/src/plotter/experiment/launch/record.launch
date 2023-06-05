@@ -10,6 +10,9 @@
     <arg name="MASS_TRIAL" default="false"/>
     <arg name="EMG" default="false"/>
     <arg name="MASS_CHANGE" default="false"/>
+    <arg name="CALIBRATION" default="false"/>
+    <arg name="COMPENSATION" default="false"/>
+    <arg name="INTENTION" default="false"/>
     <node pkg="experiment" type="experiment_recorder" name="bag_recorder" output="screen"> 
         <param  name="save_dir" value="$(arg DIR)" type="string"/>
         <param  name="subject" value="$(arg SUBJECT)" type="string"/>
@@ -22,6 +25,9 @@
         <param name="mass_trial" value="$(arg MASS_TRIAL)" type="bool"/>
         <param name="emg" value="$(arg EMG)"  type="bool"/>
         <param name="mass_change" value="$(arg MASS_CHANGE)" type="bool"/>
+        <param name="calibration" value="$(arg CALIBRATION)" type="bool"/>
+        <param name="compensation" value="$(arg COMPENSATION)" type="bool"/>
+        <param name="intention" value="$(arg INTENTION)" type="bool"/>
         <rosparam command="load" file="$(find experiment)/launch/config/exp_param.yaml"/>
     </node>
 </launch>

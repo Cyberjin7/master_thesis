@@ -5,6 +5,7 @@
 #include "exo_control/exo_calibration.h"
 #include <exo_control/q.h>
 #include "experiment_srvs/MassChange.h"
+#include "experiment_srvs/AngleChange.h"
 #include "std_srvs/Empty.h"
 #include "exo_msgs/q.h"
 #include "exo_msgs/state.h"
@@ -29,6 +30,28 @@ bool change_mass(experiment_srvs::MassChange::Request &req, experiment_srvs::Mas
 {
     *mass = req.mass.data;
     ROS_INFO_STREAM("Received mass: " << *mass);
+    return true;
+}
+
+bool change_angle(experiment_srvs::AngleChange::Request &req, experiment_srvs::AngleChange::Response &res, bool *forced, double *angle)
+{
+    *forced = true;
+    *angle = deg2rad(req.angle.data);
+    res.success.data = true;
+    return true;
+}
+
+bool pred_toggle(std_srvs::EmptyRequest &req, std_srvs::Empty::Response &res, bool *pred)
+{
+    *pred = !*pred;
+    ROS_INFO_STREAM("Predictive toggled to: " << *pred);
+    return true;
+}
+
+bool cheat_toggle(std_srvs::EmptyRequest &req, std_srvs::EmptyResponse &res, bool *cheat)
+{
+    *cheat = !*cheat;
+    ROS_INFO_STREAM("Cheat toggled to: " << *cheat);
     return true;
 }
 
@@ -153,6 +176,8 @@ int main(int argc, char** argv)
     ros::param::get("~min", min_angle);
     bool predictive;
     ros::param::get("~predictive_wrench", predictive);
+    bool cheat;
+    ros::param::get("~cheat", cheat);
 
     double tao = 0;
 
@@ -185,6 +210,8 @@ int main(int argc, char** argv)
     double Ws_up = 0;
     double Ws_down = 0;
 
+    bool forced_angle = false;
+
     // Calibration
     // double interval_angle, double interval_duration, double wait_duration, double angle_min, double angle_max
     ExoControllers::Calibration down_cal(interval, duration, wait, min_angle, max_angle, predictive);
@@ -211,6 +238,10 @@ int main(int argc, char** argv)
 
     ros::ServiceServer mass_serv = n.advertiseService<experiment_srvs::MassChange::Request,experiment_srvs::MassChange::Response>("change_mass_request", boost::bind(change_mass, _1, _2, &m3));
     ros::ServiceServer cal_serv = n.advertiseService<std_srvs::Empty::Request,std_srvs::Empty::Response>("cal_trigger", boost::bind(start_cal, _1, _2, &down_cal));
+    ros::ServiceServer angle_serv = n.advertiseService<experiment_srvs::AngleChange::Request,experiment_srvs::AngleChange::Response>("change_angle_request", boost::bind(change_angle, _1, _2, &forced_angle, &q1));
+
+    ros::ServiceServer pred_toggle_serv = n.advertiseService<std_srvs::EmptyRequest, std_srvs::EmptyResponse>("predictive_toggle", boost::bind(pred_toggle, _1, _2, &predictive));
+    ros::ServiceServer cheat_toggle_serv = n.advertiseService<std_srvs::EmptyRequest, std_srvs::EmptyResponse>("cheat_toggle", boost::bind(cheat_toggle, _1, _2, &cheat));
 
     std_msgs::Float64 torque_msg;
     std_msgs::Float64 delta_tau_msg;
@@ -264,6 +295,11 @@ int main(int argc, char** argv)
             qd1 = 0;
             qdd1 = 0;
         }
+        else if (forced_angle){
+            ROS_INFO_STREAM("Forcing angle to: " << q1);
+            forced_angle = false;
+
+        }
         else
         {
             // double force_change = forceControl.forceFilterreading[9] - forceControl.forceFilterreading[5];
@@ -310,6 +346,8 @@ int main(int argc, char** argv)
                 Ws_up = 0.0;
             }
 
+            if(cheat){Ws_up = 0.0;}
+
             up_msg.data = Ws_up;
             down_msg.data = Ws_down;
             up_pub.publish(up_msg);
@@ -351,8 +389,8 @@ int main(int argc, char** argv)
             // Approach 2: 
             // TODO: make it work lol
             if(predictive && direction){
-                double intention_force = forceControl.update(Ws)* kp_down;
-                double compensation_force = g*(L2+L3)*m3*sin(q1); // * kp_down;
+                double intention_force = forceControl.update(Ws) * kp_down;
+                double compensation_force = g*(L2+L3)*m3*sin(q1); // *kp_down;
                 // ROS_INFO_STREAM("Ws: " << Ws);
                 // ROS_INFO_STREAM("Down Ws: " << intention_force);
                 // ROS_INFO_STREAM("Compensation: " << compensation_force);
@@ -373,6 +411,9 @@ int main(int argc, char** argv)
                 // else{
                 //     tao = intention_force + g_matrix - compensation_force;
                 // }
+                if(intention_force<-torque_limit){
+                    intention_force = -torque_limit;
+                }
 
                 tao = intention_force + g_matrix - compensation_force;
 
@@ -388,6 +429,16 @@ int main(int argc, char** argv)
                 tao = forceControl.update(Ws) + g_matrix;
                 // ROS_WARN_STREAM("Up=" << tao - g_matrix);
             }
+
+            // if(std::abs(tao-g_matrix) >= torque_limit){
+            //     if (signbit(tao-g_matrix)){
+            //         tao = -1*(torque_limit) +g_matrix;
+            //     }
+            //     else{
+            //         tao = torque_limit + g_matrix;
+            //     }
+            //     // tao = torque_limit*signbit(tao);
+            // }
 
             // ROS_WARN_STREAM("tao=" << tao - g_matrix);
             // if(std::abs(tao - prev_torque) > 0.1){

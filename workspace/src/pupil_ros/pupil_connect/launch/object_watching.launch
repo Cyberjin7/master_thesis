@@ -1,5 +1,5 @@
 <launch>
-    <arg name="FIXATION" default="true"/>
+    <arg name="FIXATION" default="false"/>
     <arg name="EMG" default="false"/>
     <arg name="VISION" default="true"/>
     <arg name="VISION_THRESHOLD" default="150"/>  

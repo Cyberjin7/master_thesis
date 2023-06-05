@@ -19,7 +19,7 @@ double posServo2 = 500; // 2100; //0
 double posServo1 = 2500; // 1160; //90 (180)
 
 int elbowMin = 10;
-int elbowMax = 100;
+int elbowMax = 120;
 
 double toggle = true;
 

@@ -58,6 +58,7 @@ add_service_files(
   FILES
   MassChange.srv
   Trigger.srv
+  AngleChange.srv
 )
 
 ## Generate actions in the 'action' folder
