@@ -18,12 +18,10 @@ import numpy as np
 import cv2
 from pyglui import ui
 
-# logging
-import logging
-logger = logging.getLogger(__name__)
 
 import rospy
-from darknet_ros_msgs.msg import BoundingBoxes
+from darknet_ros_msgs.msg import BoundingBoxes, BoundingBox
+from pupil_msgs.msg import hand
 
 
 class Darknet_Visualizer(Plugin):
@@ -42,6 +40,8 @@ class Darknet_Visualizer(Plugin):
         self.topic = topic_string
         self.bb_sub = None
         self.fix_box_sub = None
+        self.hand_sub = None
+        self.hold_box_sub = None
         self.boxes = ()
         self.all_flag = False
         self.fix_flag = False
@@ -55,11 +55,20 @@ class Darknet_Visualizer(Plugin):
 
         self.frame = self.g_pool.capture.frame_size
 
-        self.objects = {"bottle": 1.0,
+        self.objects = {"bottle": 0.5,
                         "cup": 0.1,
                         "wine glass": 0.1,
                         "mouse": 0.1,
                         "book": 0.2}
+        
+        self.landmarks = ()
+
+        self.hand_detected = False
+
+        self.connections = []
+
+        self.hold_object = None
+        self.hold = False
 
     def init_ui(self):
         self.add_menu()
@@ -91,8 +100,8 @@ class Darknet_Visualizer(Plugin):
             self.pupil_display_list.append((point, pt["confidence"] * 0.8))
         self.pupil_display_list[:-1] = []
 
-    def draw_bounding_box(self, verts, box):
-        draw_polyline_norm(verts, thickness=5, color=RGBA(1, 1, 1, 1.0))   
+    def draw_bounding_box(self, verts, box, rgba):
+        draw_polyline_norm(verts, thickness=5, color=rgba)   
         self.glfont.set_color_float((1.0,1.0,1.0,1.0))
         try:
             self.glfont.draw_text(box.xmin, box.ymin, box.Class + ": " + "{:.2f}".format(self.objects.get(box.Class)) + "kg")
@@ -120,7 +129,10 @@ class Darknet_Visualizer(Plugin):
             verts = [top_left, top_right, bottom_right, bottom_left, top_left]
 
             if self.all:
-                self.draw_bounding_box(verts, box)
+                if self.hold and (self.hold_object.Class == box.Class):
+                    self.draw_bounding_box(verts, box, RGBA(1, 0, 0, 1.0))
+                else:
+                    self.draw_bounding_box(verts, box, RGBA(1, 1, 1, 1.0))
             else:
                 for pt, a in self.pupil_display_list:
                     if (box.xmin <= pt[0] <= box.xmax) and (box.ymin <= pt[1] <= box.ymax):
@@ -133,8 +145,63 @@ class Darknet_Visualizer(Plugin):
                         #     self.glfont.draw_text(box.xmin, box.ymin, box.Class)
                         # # self.glfont.draw_text(box.xmin, box.ymin, box.Class + ": " +"{:.1f}".format(box.probability*100))
                         # self.glfont.set_align_string(v_align='left', h_align='top')
-                        self.draw_bounding_box(verts, box)
+                        if self.hold and (self.hold_object.Class == box.Class):
+                            self.draw_bounding_box(verts, box, RGBA(1, 0, 0, 1.0))
+                        else:
+                            self.draw_bounding_box(verts, box, RGBA(1, 1, 1, 1.0))
+
+                        # self.draw_bounding_box(verts, box, RGBA(1, 1, 1, 1.0))
                         break
+
+        if self.hand_detected:
+            draw_polyline_norm([[self.landmarks[0].x, self.landmarks[0].y], 
+                            [self.landmarks[1].x, self.landmarks[1].y],
+                            [self.landmarks[2].x, self.landmarks[2].y],
+                            [self.landmarks[3].x, self.landmarks[3].y],
+                            [self.landmarks[4].x, self.landmarks[4].y]], thickness=5, color=RGBA(0, 1, 0, 1.0))
+            draw_polyline_norm([[self.landmarks[0].x, self.landmarks[0].y], 
+                            [self.landmarks[5].x, self.landmarks[5].y],
+                            [self.landmarks[6].x, self.landmarks[6].y],
+                            [self.landmarks[7].x, self.landmarks[7].y],
+                            [self.landmarks[8].x, self.landmarks[8].y]], thickness=5, color=RGBA(0, 1, 0, 1.0))
+            draw_polyline_norm([[self.landmarks[0].x, self.landmarks[0].y], 
+                            [self.landmarks[9].x, self.landmarks[9].y],
+                            [self.landmarks[10].x, self.landmarks[10].y],
+                            [self.landmarks[11].x, self.landmarks[11].y],
+                            [self.landmarks[12].x, self.landmarks[12].y]], thickness=5, color=RGBA(0, 1, 0, 1.0))
+            draw_polyline_norm([[self.landmarks[0].x, self.landmarks[0].y], 
+                            [self.landmarks[13].x, self.landmarks[13].y],
+                            [self.landmarks[14].x, self.landmarks[14].y],
+                            [self.landmarks[15].x, self.landmarks[15].y],
+                            [self.landmarks[16].x, self.landmarks[16].y]], thickness=5, color=RGBA(0, 1, 0, 1.0))
+            draw_polyline_norm([[self.landmarks[0].x, self.landmarks[0].y], 
+                            [self.landmarks[17].x, self.landmarks[17].y],
+                            [self.landmarks[18].x, self.landmarks[18].y],
+                            [self.landmarks[19].x, self.landmarks[19].y],
+                            [self.landmarks[20].x, self.landmarks[20].y]], thickness=5, color=RGBA(0, 1, 0, 1.0))
+            draw_polyline_norm([[self.landmarks[5].x, self.landmarks[5].y], 
+                            [self.landmarks[9].x, self.landmarks[9].y],
+                            [self.landmarks[13].x, self.landmarks[13].y],
+                            [self.landmarks[17].x, self.landmarks[17].y]], thickness=5, color=RGBA(0, 1, 0, 1.0)) 
+            for landmark in self.landmarks:
+                draw_points_norm([[landmark.x, landmark.y]], color=RGBA(1,0,0,1.0), size=10.0)
+            # self.hand_detected = False
+        
+        # if self.hold:
+        #     top_left = [self.hold_object.xmin/self.frame[0], 1 - self.hold_object.ymin/self.frame[1]]
+        #     top_right = [self.hold_object.xmax/self.frame[0], 1 - self.hold_object.ymin/self.frame[1]]
+        #     bottom_left = [self.hold_object.xmin/self.frame[0], 1 - self.hold_object.ymax/self.frame[1]]
+        #     bottom_right = [self.hold_object.xmax/self.frame[0], 1 - self.hold_object.ymax/self.frame[1]]
+
+        #     verts = [top_left, top_right, bottom_right, bottom_left, top_left]
+        #     draw_polyline_norm(verts, thickness=5, color=RGBA(1, 0, 0, 1.0))   
+        #     self.glfont.set_color_float((1.0,1.0,1.0,1.0))
+        #     try:
+        #         self.glfont.draw_text(box.xmin, box.ymin, box.Class + ": " + "{:.2f}".format(self.objects.get(box.Class)) + "kg")
+        #     except TypeError:
+        #         self.glfont.draw_text(box.xmin, box.ymin, box.Class)
+        #     # self.glfont.draw_text(box.xmin, box.ymin, box.Class + ": " +"{:.1f}".format(box.probability*100))
+        #     self.glfont.set_align_string(v_align='left', h_align='top')
 
         # self.boxes = []
 
@@ -147,8 +214,6 @@ class Darknet_Visualizer(Plugin):
         return {'topic_string':self.topic}
     
     def on_click(self, pos, button, action):
-        print(button)
-        print(action)
         return super().on_click(pos, button, action)
     
     def callback(self, data):
@@ -159,12 +224,29 @@ class Darknet_Visualizer(Plugin):
         # for box in data.bounding_boxes:
         #     print(box.Class)
 
+    def hand_callback(self, data):
+        if not self.hand_detected:
+            self.hand_detected = True
+            # print('Hand detected: ', self.hand_detected)
+        self.landmarks = data.landmark
+        for landmark in self.landmarks:
+            landmark.y = 1 - landmark.y
+
+    def hold_callback(self, data):
+        if not (data.Class == "none"):
+            self.hold = True
+        else:
+            self.hold = False
+        self.hold_object = data
+
     def on_init_click(self):
         rospy.init_node('pupil_ros_plugin')
         self.init_flag = True
 
     def on_subscribe_click(self, _=None):
         self.bb_sub = rospy.Subscriber('darknet_ros/bounding_boxes', BoundingBoxes, self.callback)
+        self.hand_sub = rospy.Subscriber('hand', hand, self.hand_callback)
+        self.hold_box_sub = rospy.Subscriber('holding_object', BoundingBox, self.hold_callback)
         # if(self.all_flag and not self.fix_flag):
         #     if(self.bb_sub is not None):
         #         self.bb_sub.unregister()
@@ -180,14 +262,19 @@ class Darknet_Visualizer(Plugin):
     
     def on_unsubscribe_click(self, _=None):
         self.bb_sub.unregister()
+        self.hand_sub.unregister()
+        self.hold_box_sub.unregister()
         self.boxes.clear()
+        self.landmarks.clear()
 
     def on_change_click(self):
         if(self.all_flag and not self.fix_flag):
             self.all = True
+            print('Change to all')
         elif(not self.all_flag and self.fix_flag):
             self.all = False
+            print('Change to 1 only')
         elif(self.all_flag and self.fix_flag):
-            logger('Both no work')
+            print('Both no work')
         else:
-            logger('No option selected')
+            print('No option selected')

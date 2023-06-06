@@ -61,6 +61,7 @@ find_package(catkin REQUIRED COMPONENTS
    intbag.msg
    fixation.msg
    hand_pos.msg
+   hand.msg
  )
 
 ## Generate services in the 'srv' folder

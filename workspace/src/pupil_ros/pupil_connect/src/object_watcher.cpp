@@ -24,6 +24,7 @@ class ObjectEyer{
         ros::ServiceClient mass_client;
         ros::Publisher target_pub;
         ros::Publisher mass_change_pub;
+        ros::Publisher hold_pub;
         std::map<std::string, double> object_mass_list;
         double vision_threshold;
         bool hold;
@@ -76,6 +77,7 @@ ObjectEyer::ObjectEyer(ros::NodeHandle handle, std::map<std::string, double> obj
     this->object_mass_list = object_list;
 
     this->target_pub = handle.advertise<std_msgs::Float64>("target", 60);
+    this->hold_pub = handle.advertise<darknet_ros_msgs::BoundingBox>("holding_object", 60);
     this->mass_change_pub = handle.advertise<sync_msgs::MassTrial>("mass_change", 60);
     this->mass_client = handle.serviceClient<experiment_srvs::MassChange>("change_mass_request");
 
@@ -256,6 +258,7 @@ void ObjectEyer::assess_hold()
             this->hold = true;
             this->holding_box = this->target_box;
             this->mass_request(this->target_box.Class.data());
+            this->hold_pub.publish(this->target_box);
         }
 
     }
@@ -283,6 +286,7 @@ void ObjectEyer::assess_hold()
             this->target_box.ymin = 0.0;
             this->target_box.Class.clear();
             this->target_box.Class.assign("none");
+            this->hold_pub.publish(this->target_box);
         }
     }
 }

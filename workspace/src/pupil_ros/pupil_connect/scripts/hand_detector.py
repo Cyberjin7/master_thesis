@@ -7,6 +7,7 @@ import rospy
 from pupil_msgs.msg import frame
 from geometry_msgs.msg import Point
 from pupil_msgs.msg import hand_pos
+from pupil_msgs.msg import hand
 import time
 
 mp_hands = mp.solutions.hands
@@ -17,17 +18,19 @@ class FrameSub:
     def __init__(self):
         self.image_sub = rospy.Subscriber('pupil_world', frame, self.callback)
         self.hand_pub = rospy.Publisher('hand_position', hand_pos, queue_size=60)
+        self.hand_all_pub = rospy.Publisher('hand', hand, queue_size=60)
         self.cv_bridge = CvBridge()
         self.start_time = None
         self.tic = time.perf_counter()
         self.toc = time.perf_counter()
         self.hand_pos = hand_pos()
+        self.hand_all = hand()
 
     def callback(self, data):
         # self.tic = time.perf_counter()
         # print(self.tic - self.toc) # time between callback
         self.toc = time.perf_counter()
-        if(self.toc - self.tic >= 0.05):
+        if(self.toc - self.tic >= 0.04):
             cv_image = self.cv_bridge.imgmsg_to_cv2(data.image, "bgr8") # 0.0006s average time 
             self.detect_hand(cv_image)
             cv2.waitKey(1)
@@ -62,11 +65,28 @@ class FrameSub:
                         # self.hand_pos.x = hand.landmark[0].x
                         # self.hand_pos.y = hand.landmark[0].y
 
+                        # self.hand_all.landmark.clear()
+                        verts = []
+                        for i in range(len(hand.landmark)):
+                            pos = Point()
+                            pos.x = hand.landmark[i].x
+                            pos.y = hand.landmark[i].y
+                            pos.z = hand.landmark[i].z
+                            verts.append(pos)
+                            # self.hand_all.landmark.append(pos)
+                        self.hand_all.landmark = verts
+                        # for landmark in hand.landmark:
+                        #     pos.x = landmark.x
+                        #     pos.y = landmark.y
+                        #     pos.z = landmark.z
+                        #     self.hand_all.landmark.append(pos)
+
                         self.hand_pos.wrist_pos.x = hand.landmark[0].x
                         self.hand_pos.wrist_pos.y = hand.landmark[0].y
                         self.hand_pos.mft_pos.x = hand.landmark[12].x
                         self.hand_pos.mft_pos.y = hand.landmark[12].y
                         self.hand_pub.publish(self.hand_pos)
+                        self.hand_all_pub.publish(self.hand_all)
                     elif(results.multi_handedness[num].classification[0].label == 'Left'):
                         # print('Right: ') # + str(hand.landmark[0].x))
                         pass
@@ -82,7 +102,7 @@ class FrameSub:
                     
                     # print(keypoints[0])
 
-        cv2.imshow('Hand Tracking', image)
+        # cv2.imshow('Hand Tracking', image)
 
 
 if __name__ == '__main__':
