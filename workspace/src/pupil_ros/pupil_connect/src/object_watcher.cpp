@@ -9,6 +9,7 @@
 #include "geometry_msgs/Point.h"
 #include "sync_msgs/MassTrial.h"
 #include "pupil_msgs/hand_pos.h"
+#include "pupil_msgs/hand.h"
 #include <cmath>
 
 #include <sstream>
@@ -16,6 +17,7 @@
 class ObjectEyer{
     private:
         std::vector<double> gaze_pos;
+        std::vector<geometry_msgs::Point> landmarks;
         std::vector<darknet_ros_msgs::BoundingBox> boxes;
         int64_t xmin;
         int64_t xmax;
@@ -46,6 +48,7 @@ class ObjectEyer{
         void sendMass(std::vector<double> gaze_norm_pos);
         void emgCallback(const std_msgs::Float64::ConstPtr& activity);
         void handCallback(const pupil_msgs::hand_pos::ConstPtr& hand_pos);
+        void handAllCallback(const pupil_msgs::hand::ConstPtr& hand_all);
         void mass_request(std::string target_object);
         void mass_request(double target_mass);
         void set_threshold(double threshold_value);
@@ -231,6 +234,18 @@ void ObjectEyer::handCallback(const pupil_msgs::hand_pos::ConstPtr& hand_pos)
     // }
 }
 
+void ObjectEyer::handAllCallback(const pupil_msgs::hand::ConstPtr& hand_all)
+{
+    if(!this->hand){this->hand = true;}
+    this->landmarks.clear();
+    // this->landmarks = hand_all->landmark;
+    for (auto landmark: hand_all->landmark){
+        landmark.x = landmark.x*1200;
+        landmark.y = landmark.y*720;
+        this->landmarks.push_back(landmark);
+    }
+}
+
 bool ObjectEyer::within_x(double xmin, double xmax, double value)
 {
     return ((value >= xmin)&&(value <= xmax));
@@ -253,7 +268,7 @@ void ObjectEyer::assess_hold()
         //         this->mass_request(this->target_box.Class.data());
         //     }
         // }
-        if(within_y(this->mft_pos[1], this->wrist_pos[1], this->target_box.ymax)){
+        if(within_x(this->target_box.xmin, this->target_box.xmax, this->landmarks[9].x) && within_y(this->landmarks[12].y, this->landmarks[0].y, this->target_box.ymax)){
             ROS_INFO_STREAM("Holding " << this->target_box.Class.data());
             this->hold = true;
             this->holding_box = this->target_box;
@@ -269,7 +284,7 @@ void ObjectEyer::assess_hold()
         //     this->mass_request(0.0);
         // }
         // if((!within_x(this->holding_box.xmin, this->holding_box.xmax, this->wrist_pos[0]))||(!within_y(this->mft_pos[1], this->wrist_pos[1],  this->holding_box.ymax))){
-        if(!within_y(this->mft_pos[1], this->wrist_pos[1], this->holding_box.ymax)){
+        if(!within_y(this->landmarks[12].y, this->landmarks[0].y, this->holding_box.ymax)){
             ROS_INFO_STREAM("Not holding");
             this->hold = false;
             this->mass_request(0.0);
@@ -365,7 +380,8 @@ int main(int argc, char **argv)
         emg_activity = n.subscribe("emg_activity_thresh", 1, &ObjectEyer::emgCallback, &eyer);
     }
     if(vision){
-        hand_tracker = n.subscribe("hand_position", 60, &ObjectEyer::handCallback, &eyer);
+        // hand_tracker = n.subscribe("hand_position", 60, &ObjectEyer::handCallback, &eyer);
+        hand_tracker = n.subscribe("hand", 60, &ObjectEyer::handAllCallback, &eyer);
     }
 
 
