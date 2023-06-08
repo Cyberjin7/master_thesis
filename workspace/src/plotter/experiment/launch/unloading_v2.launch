@@ -1,0 +1,19 @@
+<launch>
+    <arg name="RECORD" default="true"/>
+    <node pkg="experiment" type="experiment_unload_time" name="unloading_experiment" output="screen">
+        <rosparam command="load" file="$(find pupil_connect)/launch/config/objects.yaml"/>
+        <rosparam command="load" file="$(find experiment)/launch/config/unloading.yaml"/>
+    </node>
+    <node pkg="experiment" type="experiment_input_manager" name="input_manager" output="screen">
+        <rosparam command="load" file="$(find pupil_connect)/launch/config/objects.yaml"/>
+        <rosparam command="load" file="$(find experiment)/launch/config/unloading.yaml"/>
+    </node>
+    <include file="$(find experiment)/launch/record.launch" if="$(arg RECORD)">
+        <arg name="STATE" value="true"/>
+        <arg name="MASS_CHANGE" value="true"/>
+        <arg name="EMG" value="true"/>
+        <arg name="CALIBRATION" value="true"/>
+        <arg name="COMPENSATION" value="true"/>
+        <arg name="INTENTION" value="true"/>
+    </include>
+</launch>

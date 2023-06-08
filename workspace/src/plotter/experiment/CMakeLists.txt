@@ -164,6 +164,8 @@ add_executable(${PROJECT_NAME}_sync_player src/Applications/sync_player.cpp)
 add_executable(${PROJECT_NAME}_recorder src/Applications/bag_recorder.cpp)
 add_executable(${PROJECT_NAME}_analyzer src/Applications/data_analyser.cpp)
 add_executable(${PROJECT_NAME}_unloading src/Applications/unloading_exp.cpp)
+add_executable(${PROJECT_NAME}_input_manager src/Applications/input_manager.cpp)
+add_executable(${PROJECT_NAME}_unload_time src/Applications/unloading_time_exp.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -182,6 +184,8 @@ add_dependencies(${PROJECT_NAME}_sync_player ${${PROJECT_NAME}_EXPORTED_TARGETS}
 add_dependencies(${PROJECT_NAME}_recorder ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(${PROJECT_NAME}_analyzer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(${PROJECT_NAME}_unloading ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME}_input_manager ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME}_unload_time ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_player_trigger
@@ -218,6 +222,16 @@ target_link_libraries(${PROJECT_NAME}_analyzer
   MassChanger
 )
 target_link_libraries(${PROJECT_NAME}_unloading
+  ${catkin_LIBRARIES}
+  SyncPlayer
+  MassChanger
+)
+target_link_libraries(${PROJECT_NAME}_input_manager
+  ${catkin_LIBRARIES}
+  SyncPlayer
+  MassChanger
+)
+target_link_libraries(${PROJECT_NAME}_unload_time
   ${catkin_LIBRARIES}
   SyncPlayer
   MassChanger
