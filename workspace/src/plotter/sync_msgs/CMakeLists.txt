@@ -57,6 +57,7 @@ add_message_files(
   response.msg
   MassData.msg
   MassTrial.msg
+  TrialType.msg
 )
 
 ## Generate services in the 'srv' folder

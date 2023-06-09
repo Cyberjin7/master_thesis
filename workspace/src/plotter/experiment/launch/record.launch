@@ -13,6 +13,8 @@
     <arg name="CALIBRATION" default="false"/>
     <arg name="COMPENSATION" default="false"/>
     <arg name="INTENTION" default="false"/>
+    <arg name="LOADING_TYPE" default="false"/>
+    <arg name="LOADING_TRIAL" default="false"/>
     <node pkg="experiment" type="experiment_recorder" name="bag_recorder" output="screen"> 
         <param  name="save_dir" value="$(arg DIR)" type="string"/>
         <param  name="subject" value="$(arg SUBJECT)" type="string"/>
@@ -28,6 +30,8 @@
         <param name="calibration" value="$(arg CALIBRATION)" type="bool"/>
         <param name="compensation" value="$(arg COMPENSATION)" type="bool"/>
         <param name="intention" value="$(arg INTENTION)" type="bool"/>
+        <param name="load_type" value="$(arg LOADING_TYPE)" type="bool"/>
+        <param name="load_trial" value="$(arg LOADING_TRIAL)" type="bool"/>
         <rosparam command="load" file="$(find experiment)/launch/config/exp_param.yaml"/>
     </node>
 </launch>

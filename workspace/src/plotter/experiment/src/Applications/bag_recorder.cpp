@@ -14,6 +14,7 @@
 #include "std_msgs/Float64MultiArray.h"
 #include "sync_msgs/MassTrial.h"
 #include "std_msgs/Float64.h"
+#include "sync_msgs/TrialType.h"
 
 namespace fs = std::filesystem;
 
@@ -122,6 +123,22 @@ namespace bagRecorder
         }
     }
 
+    void loadTypeCallback(const sync_msgs::TrialType::ConstPtr& msg)
+    {
+        if(bagRecorder::record)
+        {
+            bagRecorder::bag.write("load_type", msg->header.stamp, msg);
+        }
+    }
+
+    void loadTrialCallback(const sync_msgs::MassTrial::ConstPtr& msg)
+    {
+        if(bagRecorder::record)
+        {
+            bagRecorder::bag.write("load_trial", msg->header.stamp, msg);
+        }
+    }
+
     bool toggleCallback(experiment_srvs::Trigger::Request &req, experiment_srvs::Trigger::Response &res, fs::path bag_path)
     {
         if (req.trigger.data)
@@ -200,6 +217,8 @@ int main(int argc, char **argv)
     bool calibration;
     bool compensation;
     bool intention;
+    bool load_type;
+    bool load_trial;
 
     ros::param::get("~q_sync", q_sync);
     ros::param::get("~q_ref_sync", q_ref_sync);
@@ -213,6 +232,8 @@ int main(int argc, char **argv)
     ros::param::get("~calibration", calibration);
     ros::param::get("~intention", compensation);
     ros::param::get("~intention", intention);
+    ros::param::get("~load_type", load_type);
+    ros::param::get("~load_trial", load_trial);
 
     int rate;
     ros::param::get("~rate", rate);
@@ -236,6 +257,8 @@ int main(int argc, char **argv)
     ros::Subscriber calibration_sub;
     ros::Subscriber compensation_sub;
     ros::Subscriber intention_sub;
+    ros::Subscriber load_type_sub;
+    ros::Subscriber load_trial_sub;
 
     if(q_sync){
         q_sub = n.subscribe("q_sync", 100, bagRecorder::qCallback);
@@ -284,6 +307,12 @@ int main(int argc, char **argv)
     if(intention){
         intention_sub = n.subscribe("intention", 100, bagRecorder::intentionCallback);
         ROS_INFO_STREAM("Subbed to: intention");
+    }
+    if(load_type){
+        load_type_sub = n.subscribe("load_type", 100, bagRecorder::loadTypeCallback);
+    }
+    if(load_trial){
+        load_trial_sub = n.subscribe("load_trial", 100, bagRecorder::loadTrialCallback);
     }
 
     bagRecorder::bag.open(bag_file, rosbag::bagmode::Write);
