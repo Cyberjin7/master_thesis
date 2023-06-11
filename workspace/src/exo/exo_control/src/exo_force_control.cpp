@@ -35,8 +35,8 @@ namespace ExoControllers{
         cell11 = handle.advertise<tum_ics_skin_msgs::SkinCellData>("cell11", 10);
         cell12 = handle.advertise<tum_ics_skin_msgs::SkinCellData>("cell12", 10);
         cell13 = handle.advertise<tum_ics_skin_msgs::SkinCellData>("cell13", 10);
-        down_pub = handle.advertise<std_msgs::Float64>("down_force", 10);
-        up_pub = handle.advertise<std_msgs::Float64>("up_force", 10);
+        down_pub = handle.advertise<std_msgs::Float64>("down_sensor", 10);
+        up_pub = handle.advertise<std_msgs::Float64>("up_sensor", 10);
 
         upFilterreading = QVector<double>(10,0.0);
         downFilterreading = QVector<double>(10,0.0);

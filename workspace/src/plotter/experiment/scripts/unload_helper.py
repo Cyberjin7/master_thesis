@@ -31,7 +31,7 @@ def typeCallback(data):
 if __name__ == '__main__':
     rospy.init_node('unload_helper', anonymous=True)
 
-    rospy.Subscriber("load_trial", MassTrial, trialCallback)
+    # rospy.Subscriber("load_trial", MassTrial, trialCallback)
     rospy.Subscriber("load_type", TrialType, typeCallback)
 
     rospy.spin()

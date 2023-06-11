@@ -15,6 +15,7 @@
 #include "sync_msgs/MassTrial.h"
 #include "std_msgs/Float64.h"
 #include "sync_msgs/TrialType.h"
+#include "darknet_ros_msgs/BoundingBox.h"
 
 namespace fs = std::filesystem;
 
@@ -123,6 +124,14 @@ namespace bagRecorder
         }
     }
 
+    void holdingCallback(const darknet_ros_msgs::BoundingBox::ConstPtr& msg)
+    {
+        if(bagRecorder::record)
+        {
+            bagRecorder::bag.write("mass_change", ros::Time::now(), msg);
+        }
+    }
+
     void loadTypeCallback(const sync_msgs::TrialType::ConstPtr& msg)
     {
         if(bagRecorder::record)
@@ -136,6 +145,22 @@ namespace bagRecorder
         if(bagRecorder::record)
         {
             bagRecorder::bag.write("load_trial", msg->header.stamp, msg);
+        }
+    }
+
+    void upSensorCallback(const std_msgs::Float64::ConstPtr& msg)
+    {
+        if(bagRecorder::record)
+        {
+            bagRecorder::bag.write("up_sensor", ros::Time::now(), msg);
+        }
+    }
+
+    void downSensorCallback(const std_msgs::Float64::ConstPtr& msg)
+    {
+        if(bagRecorder::record)
+        {
+            bagRecorder::bag.write("down_sensor", ros::Time::now(), msg);
         }
     }
 
@@ -219,6 +244,7 @@ int main(int argc, char **argv)
     bool intention;
     bool load_type;
     bool load_trial;
+    bool force;
 
     ros::param::get("~q_sync", q_sync);
     ros::param::get("~q_ref_sync", q_ref_sync);
@@ -234,6 +260,7 @@ int main(int argc, char **argv)
     ros::param::get("~intention", intention);
     ros::param::get("~load_type", load_type);
     ros::param::get("~load_trial", load_trial);
+    ros::param::get("~force", force);
 
     int rate;
     ros::param::get("~rate", rate);
@@ -259,6 +286,9 @@ int main(int argc, char **argv)
     ros::Subscriber intention_sub;
     ros::Subscriber load_type_sub;
     ros::Subscriber load_trial_sub;
+    ros::Subscriber hold_sub;
+    ros::Subscriber down_sub;
+    ros::Subscriber up_sub;
 
     if(q_sync){
         q_sub = n.subscribe("q_sync", 100, bagRecorder::qCallback);
@@ -295,6 +325,7 @@ int main(int argc, char **argv)
     if(mass_change){
         mass_change_sub = n.subscribe("mass_change", 60, bagRecorder::massChangeCallback);
         ROS_INFO_STREAM("Subbed to: mass_change");
+        hold_sub = n.subscribe("holding_object", 60, bagRecorder::holdingCallback);
     }
     if(calibration){
         calibration_sub = n.subscribe("down_cal", 100, bagRecorder::calibrationCallback);
@@ -313,6 +344,10 @@ int main(int argc, char **argv)
     }
     if(load_trial){
         load_trial_sub = n.subscribe("load_trial", 100, bagRecorder::loadTrialCallback);
+    }
+    if(force){
+        down_sub = n.subscribe("down_sensor", 100, bagRecorder::downSensorCallback);
+        up_sub = n.subscribe("up_sensor", 100, bagRecorder::upSensorCallback);
     }
 
     bagRecorder::bag.open(bag_file, rosbag::bagmode::Write);

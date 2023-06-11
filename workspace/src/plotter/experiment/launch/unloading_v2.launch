@@ -4,10 +4,11 @@
         <rosparam command="load" file="$(find pupil_connect)/launch/config/objects.yaml"/>
         <rosparam command="load" file="$(find experiment)/launch/config/unloading.yaml"/>
     </node>
-    <node pkg="experiment" type="experiment_input_manager" name="input_manager" output="screen">
+    <node pkg="experiment" type="experiment_input_manager" name="input_manager" output="log">
         <rosparam command="load" file="$(find pupil_connect)/launch/config/objects.yaml"/>
         <rosparam command="load" file="$(find experiment)/launch/config/unloading.yaml"/>
     </node>
+    <node pkg="experiment" type="unload_helper.py" name="unload_helper" output="log"/>
     <include file="$(find experiment)/launch/record.launch" if="$(arg RECORD)">
         <arg name="STATE" value="true"/>
         <arg name="MASS_CHANGE" value="true"/>
@@ -15,5 +16,6 @@
         <arg name="CALIBRATION" value="true"/>
         <arg name="COMPENSATION" value="true"/>
         <arg name="INTENTION" value="true"/>
+        <arg name="FORCE" value="true"/>
     </include>
 </launch>
