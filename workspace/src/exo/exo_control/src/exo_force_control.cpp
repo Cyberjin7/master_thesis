@@ -203,6 +203,18 @@ namespace ExoControllers{
         }
     }
 
+    void ForceControl::downKpCallback(const std_msgs::Float64::ConstPtr &msg)
+    {
+        this->m_kp_down = msg->data;
+        ROS_INFO_STREAM("Down kp: " << msg->data);
+    }
+
+    void ForceControl::upKpCallback(const std_msgs::Float64::ConstPtr &msg)
+    {
+        this->m_kp_up = msg->data;
+        ROS_INFO_STREAM("Up kp: " << msg->data);
+    }
+
     // void ForceControl::gCallback(const geometry_msgs::Vector3::ConstPtr& msg)
     // {
     //     // pthread_mutex_lock( &this->count_mutex );

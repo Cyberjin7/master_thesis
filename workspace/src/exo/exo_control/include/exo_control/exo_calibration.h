@@ -35,6 +35,7 @@ namespace ExoControllers
             ros::Duration get_wait_duration();
             ros::Time get_t();
             std::vector<double> get_cal_angles();
+            std::map<double, double> get_cal_values();
 
             void set_start(bool toggle);
             void set_predictive(bool toggle);

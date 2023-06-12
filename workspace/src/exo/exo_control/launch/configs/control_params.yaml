@@ -17,8 +17,8 @@ pos_ctrl:
   kd: 3.0
 
 force_ctrl:
-  kp_up: 10.0 # 7.5
-  kp_down: 8.0 # 8.0 # 6.5 # additional kp for mass scaled version?
+  kp_up: 9.0 # 7.5
+  kp_down: 10.0 # 8.0 # 6.5 # additional kp for mass scaled version?
   ki_up: 2.0
   ki_down: 2.0
   kd_up: 0.0

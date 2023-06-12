@@ -6,4 +6,5 @@ targets:
 loading_time: 4 
 unloading_time: 3
 resting_time: 3
+start_position: 80
 order: ["rest", "load", "unload"]

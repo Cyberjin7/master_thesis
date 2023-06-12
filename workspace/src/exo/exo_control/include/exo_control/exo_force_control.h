@@ -4,6 +4,7 @@
 #include <ros/ros.h>
 #include <Eigen/Dense>
 #include <tum_ics_skin_msgs/SkinCellDataArray.h>
+#include "std_msgs/Float64.h"
 // #include <geometry_msgs/Vector3.h>
 #include <QVector>
 
@@ -56,6 +57,9 @@ namespace ExoControllers{
             void pLowCallback(const tum_ics_skin_msgs::SkinCellDataArray::ConstPtr& msg);
             void fUpCallback(const tum_ics_skin_msgs::SkinCellDataArray::ConstPtr& msg);
             void fLowCallback(const tum_ics_skin_msgs::SkinCellDataArray::ConstPtr& msg);
+
+            void downKpCallback(const std_msgs::Float64::ConstPtr& msg);
+            void upKpCallback(const std_msgs::Float64::ConstPtr& msg);
             // void gCallback(const geometry_msgs::Vector3::ConstPtr& msg);
             double get_m_gx();
             double get_m_gy();

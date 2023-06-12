@@ -11,6 +11,7 @@
 #include "sync_msgs/response.h"
 #include "sync_msgs/MassData.h"
 #include "exo_msgs/state.h"
+#include "exo_msgs/calibration.h"
 #include "std_msgs/Float64MultiArray.h"
 #include "sync_msgs/MassTrial.h"
 #include "std_msgs/Float64.h"
@@ -45,6 +46,22 @@ namespace bagRecorder
         if(bagRecorder::record)
         {
             bagRecorder::bag.write("calibration", ros::Time::now(), msg);
+        }
+    }
+
+    void upCalCallback(const exo_msgs::calibration::ConstPtr& msg)
+    {
+        if(bagRecorder::record)
+        {
+            bagRecorder::bag.write("up_calibration", ros::Time::now(), msg);
+        }
+    }
+
+    void downCalCallback(const exo_msgs::calibration::ConstPtr& msg)
+    {
+        if(bagRecorder::record)
+        {
+            bagRecorder::bag.write("down_calibration", ros::Time::now(), msg);
         }
     }
 
@@ -164,6 +181,54 @@ namespace bagRecorder
         }
     }
 
+    void upWsCallback(const std_msgs::Float64::ConstPtr& msg)
+    {
+        if(bagRecorder::record)
+        {
+            bagRecorder::bag.write("up_Ws", ros::Time::now(), msg);
+        }
+    }
+
+    void downWsCallback(const std_msgs::Float64::ConstPtr& msg)
+    {
+        if(bagRecorder::record)
+        {
+            bagRecorder::bag.write("down_Ws", ros::Time::now(), msg);
+        }
+    }
+
+    void WsCallback(const std_msgs::Float64::ConstPtr& msg)
+    {
+        if(bagRecorder::record)
+        {
+            bagRecorder::bag.write("Ws", ros::Time::now(), msg);
+        }
+    }
+
+    void kpCompCallback(const std_msgs::Float64::ConstPtr& msg)
+    {
+        if(bagRecorder::record)
+        {
+            bagRecorder::bag.write("kp_compensation", ros::Time::now(), msg);
+        }
+    }
+
+    void kpDownCallback(const std_msgs::Float64::ConstPtr& msg)
+    {
+        if(bagRecorder::record)
+        {
+            bagRecorder::bag.write("kp_down", ros::Time::now(), msg);
+        }
+    }
+
+    void kpUpCallback(const std_msgs::Float64::ConstPtr& msg)
+    {
+        if(bagRecorder::record)
+        {
+            bagRecorder::bag.write("kp_up", ros::Time::now(), msg);
+        }
+    }
+
     bool toggleCallback(experiment_srvs::Trigger::Request &req, experiment_srvs::Trigger::Response &res, fs::path bag_path)
     {
         if (req.trigger.data)
@@ -215,7 +280,7 @@ namespace bagRecorder
 
 int main(int argc, char **argv)
 {
-    bagRecorder::record = false;
+    // bagRecorder::record = false;
     
 
     // rosbag::Bag bag;
@@ -229,6 +294,15 @@ int main(int argc, char **argv)
     ros::param::get("~subject", subject);
     ros::param::get("~save_dir", bag_dir);
     fs::path bag_file = bagRecorder::makePath(subject, bag_dir);
+
+    bool listen;
+    ros::param::get("~listen", listen);
+    if(listen){
+        bagRecorder::record = false;
+    }
+    else{
+        bagRecorder::record = true;
+    }
 
     bool q_sync;
     bool q_ref_sync;
@@ -245,6 +319,7 @@ int main(int argc, char **argv)
     bool load_type;
     bool load_trial;
     bool force;
+    bool kp;
 
     ros::param::get("~q_sync", q_sync);
     ros::param::get("~q_ref_sync", q_ref_sync);
@@ -261,6 +336,7 @@ int main(int argc, char **argv)
     ros::param::get("~load_type", load_type);
     ros::param::get("~load_trial", load_trial);
     ros::param::get("~force", force);
+    ros::param::get("~kp", kp);
 
     int rate;
     ros::param::get("~rate", rate);
@@ -281,7 +357,9 @@ int main(int argc, char **argv)
     ros::Subscriber mass_trial_sub; 
     ros::Subscriber emg_sub;
     ros::Subscriber mass_change_sub;
-    ros::Subscriber calibration_sub;
+    // ros::Subscriber calibration_sub;
+    ros::Subscriber down_cal_sub;
+    ros::Subscriber up_cal_sub;
     ros::Subscriber compensation_sub;
     ros::Subscriber intention_sub;
     ros::Subscriber load_type_sub;
@@ -289,6 +367,12 @@ int main(int argc, char **argv)
     ros::Subscriber hold_sub;
     ros::Subscriber down_sub;
     ros::Subscriber up_sub;
+    ros::Subscriber down_Ws_sub;
+    ros::Subscriber up_Ws_sub;
+    ros::Subscriber Ws_sub;
+    ros::Subscriber kp_comp_sub;
+    ros::Subscriber kp_down_sub;
+    ros::Subscriber kp_up_sub;
 
     if(q_sync){
         q_sub = n.subscribe("q_sync", 100, bagRecorder::qCallback);
@@ -328,8 +412,10 @@ int main(int argc, char **argv)
         hold_sub = n.subscribe("holding_object", 60, bagRecorder::holdingCallback);
     }
     if(calibration){
-        calibration_sub = n.subscribe("down_cal", 100, bagRecorder::calibrationCallback);
-        ROS_INFO_STREAM("Subbed to: down_cal");
+        down_cal_sub = n.subscribe("down_cal", 100, bagRecorder::downCalCallback);
+        up_cal_sub = n.subscribe("up_cal", 100, bagRecorder::upCalCallback);
+        // calibration_sub = n.subscribe("down_cal", 100, bagRecorder::calibrationCallback);
+        ROS_INFO_STREAM("Subbed to: down_cal and up_cal");
     }
     if(compensation){
         compensation_sub = n.subscribe("compensation", 100, bagRecorder::compensationCallback);
@@ -348,6 +434,14 @@ int main(int argc, char **argv)
     if(force){
         down_sub = n.subscribe("down_sensor", 100, bagRecorder::downSensorCallback);
         up_sub = n.subscribe("up_sensor", 100, bagRecorder::upSensorCallback);
+        down_Ws_sub = n.subscribe("down", 100, bagRecorder::downWsCallback);
+        up_Ws_sub = n.subscribe("up", 100, bagRecorder::upWsCallback);
+        Ws_sub = n.subscribe("Ws", 100, bagRecorder::WsCallback);
+    }
+    if(kp){
+        kp_comp_sub = n.subscribe("external_kp", 1, bagRecorder::kpCompCallback);
+        kp_down_sub = n.subscribe("down_kp", 1, bagRecorder::kpDownCallback);
+        kp_up_sub = n.subscribe("up_kp", 1, bagRecorder::kpUpCallback);
     }
 
     bagRecorder::bag.open(bag_file, rosbag::bagmode::Write);

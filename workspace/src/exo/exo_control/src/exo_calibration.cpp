@@ -136,6 +136,10 @@ namespace ExoControllers{
         return this->cal_angles;
     }
 
+    std::map<double, double> Calibration::get_cal_values(){
+        return this->cal_values;
+    }
+
     bool Calibration::get_predictive(){
         return this->predictive;
     }

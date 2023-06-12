@@ -9,6 +9,7 @@
 #include "std_srvs/Empty.h"
 #include "exo_msgs/q.h"
 #include "exo_msgs/state.h"
+#include "exo_msgs/calibration.h"
 
 // #include <pthread.h>
 
@@ -64,9 +65,8 @@ bool start_cal(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res, Ex
 
 void externalCallback(const std_msgs::Float64::ConstPtr &msg, double *kp)
 {
-    ROS_INFO_STREAM("Received: " << msg->data);
     *kp = msg->data;
-    ROS_INFO_STREAM("External Kp changed to: " << *kp);
+    ROS_INFO_STREAM("Compensation Kp changed to: " << *kp);
 }
 
 int main(int argc, char** argv)
@@ -88,7 +88,10 @@ int main(int argc, char** argv)
     ros::Publisher ws_N_pub = n.advertise<std_msgs::Float64>("Ws_N", 100);
     ros::Publisher intention_pub = n.advertise<std_msgs::Float64>("intention_force", 100);
     ros::Publisher compensation_pub = n.advertise<std_msgs::Float64>("compensation", 100);
-    ros::Publisher down_calibration_pub = n.advertise<std_msgs::Float64>("down_cal", 100);
+    // ros::Publisher down_calibration_pub = n.advertise<std_msgs::Float64>("down_cal", 100);
+    ros::Publisher down_calibration_pub = n.advertise<exo_msgs::calibration>("down_cal", 100);
+    ros::Publisher up_calibration_pub = n.advertise<exo_msgs::calibration>("up_cal", 100);
+    
 
     int f;
     ros::param::get("~rate", f);
@@ -158,8 +161,8 @@ int main(int argc, char** argv)
     s << ns;
     ros::param::get(s.str(), g);
 
-    double kp_down;
-    ros::param::get("~compensation_ctrl/kp_down", kp_down);
+    double kp_comp;
+    ros::param::get("~compensation_ctrl/kp_down", kp_comp);
 
     double torque_limit;
     ros::param::get("~force_ctrl/tau_lim", torque_limit);
@@ -234,7 +237,9 @@ int main(int argc, char** argv)
     ros::Publisher up_pub = n.advertise<std_msgs::Float64>("up", 100);
     ros::Publisher down_pub = n.advertise<std_msgs::Float64>("down", 100);
 
-    ros::Subscriber kp_sub = n.subscribe<std_msgs::Float64>("external_kp", 1, boost::bind(externalCallback, _1, &kp_down));
+    ros::Subscriber comp_kp_sub = n.subscribe<std_msgs::Float64>("external_kp", 1, boost::bind(externalCallback, _1, &kp_comp));
+    ros::Subscriber down_kp_sub = n.subscribe<std_msgs::Float64>("down_kp", 1, &ExoControllers::ForceControl::downKpCallback, &forceControl);
+    ros::Subscriber up_kp_sub = n.subscribe<std_msgs::Float64>("up_kp", 1, &ExoControllers::ForceControl::upKpCallback, &forceControl);
 
     ros::ServiceServer mass_serv = n.advertiseService<experiment_srvs::MassChange::Request,experiment_srvs::MassChange::Response>("change_mass_request", boost::bind(change_mass, _1, _2, &m3));
     ros::ServiceServer cal_serv = n.advertiseService<std_srvs::Empty::Request,std_srvs::Empty::Response>("cal_trigger", boost::bind(start_cal, _1, _2, &down_cal));
@@ -259,6 +264,11 @@ int main(int argc, char** argv)
     std_msgs::Float64 intention_msg;
     std_msgs::Float64 compensation_msg;
     std_msgs::Float64 down_cal_msg;
+
+    double intention_force = 0.0;
+    double compensation_force = 0.0;
+
+    exo_msgs::calibration cal_msg;
 
     while (ros::ok())
     {
@@ -294,6 +304,25 @@ int main(int argc, char** argv)
             exo_pub.publish(msg);
             qd1 = 0;
             qdd1 = 0;
+
+            if(down_cal.get_done()){
+                ROS_INFO_STREAM("Sending calibration values");
+                std::map<double, double> down_cal_values = down_cal.get_cal_values();
+                std::map<double, double> up_cal_values = up_cal.get_cal_values();
+                cal_msg.type = "down";
+                for (auto const& [angle, value] : down_cal_values){
+                    cal_msg.angle = angle;
+                    cal_msg.value = value;
+                    down_calibration_pub.publish(cal_msg);
+                } 
+                cal_msg.type = "up";
+                for (auto const& [angle, value] : up_cal_values){
+                    cal_msg.angle = angle;
+                    cal_msg.value = value;
+                    up_calibration_pub.publish(cal_msg);
+                }
+            }
+
         }
         else if (forced_angle){
             ROS_INFO_STREAM("Forcing angle to: " << q1);
@@ -324,7 +353,7 @@ int main(int argc, char** argv)
 
             /*
             Approach 1: Roughly assume mass is placed on top of skin.
-            Linear extrapolation: based on the stored calibraiton value, extrapolate sensor value for predicted mass and subtract in addition to stored value
+            Linear extrapolation: based on the stored calibration value, extrapolate sensor value for predicted mass and subtract in addition to stored value
             */
             // if(predictive){
             //     Ws_down = forceControl.downFilterreading[9] - (1+(m3/m2))*down_cal.interp_force(q1*180/3.14159265359);
@@ -368,11 +397,13 @@ int main(int argc, char** argv)
                 // Ws = -Ws_down;
                 if(down_cal.get_done() && predictive){
                     // ROS_INFO_STREAM("Cal: " << down_cal.interp_force(q1*180/3.14159265359));
-                    Ws = m2*g*sin(q1)*(Ws_down)/(down_cal.interp_force(q1*180/3.14159265359));
-                    down_cal_msg.data = down_cal.interp_force(q1*180/3.14159265359);
-                    down_calibration_pub.publish(down_cal_msg);
+                    // Ws = m2*g*sin(q1)*(Ws_down)/(down_cal.interp_force(q1*180/3.14159265359));
+
+                    // down_cal_msg.data = down_cal.interp_force(q1*180/3.14159265359);
+                    // down_calibration_pub.publish(down_cal_msg);
+
                     // ROS_INFO_STREAM("Down: " << Ws);
-                    // Ws = - Ws_down;
+                    Ws = - Ws_down;
                 }
                 else{
                     Ws = -Ws_down;
@@ -389,21 +420,23 @@ int main(int argc, char** argv)
             // Approach 2: 
             // TODO: make it work lol
             if(predictive && direction){
-                double intention_force = forceControl.update(Ws) * kp_down;
-                double compensation_force = g*(L2+L3)*m3*sin(q1); // *kp_down;
+                // double intention_force = forceControl.update(Ws); // * kp_down;
+                intention_force = forceControl.update(Ws);
+                // double compensation_force = g*(L2+L3)*m3*sin(q1)*kp_comp;
+                compensation_force = g*(L2+L3)*m3*sin(q1)*kp_comp;
                 // ROS_INFO_STREAM("Ws: " << Ws);
                 // ROS_INFO_STREAM("Down Ws: " << intention_force);
                 // ROS_INFO_STREAM("Compensation: " << compensation_force);
 
-                ws_msg.data = Ws_down; 
-                ws_N_msg.data = Ws;
-                intention_msg.data = intention_force;
-                compensation_msg.data = compensation_force;
+                // ws_msg.data = Ws_down; 
+                // ws_N_msg.data = Ws;
+                // intention_msg.data = intention_force;
+                // compensation_msg.data = compensation_force;
 
-                ws_pub.publish(ws_msg);
-                ws_N_pub.publish(ws_N_msg);
-                intention_pub.publish(intention_msg);
-                compensation_pub.publish(compensation_msg);
+                // ws_pub.publish(ws_msg);
+                // ws_N_pub.publish(ws_N_msg);
+                // intention_pub.publish(intention_msg);
+                // compensation_pub.publish(compensation_msg);
 
                 // if(intention_force > compensation_force){ // less negative means less force (but means larger value)
                 //     tao = g_matrix;
@@ -411,9 +444,10 @@ int main(int argc, char** argv)
                 // else{
                 //     tao = intention_force + g_matrix - compensation_force;
                 // }
-                if(intention_force<-torque_limit){
-                    intention_force = -torque_limit;
-                }
+
+                // if(intention_force<-torque_limit){
+                //     intention_force = -torque_limit;
+                // }
 
                 tao = intention_force + g_matrix - compensation_force;
 
@@ -426,9 +460,20 @@ int main(int argc, char** argv)
                 // ROS_WARN_STREAM("Down=" << tao - g_matrix);
             }
             else{
-                tao = forceControl.update(Ws) + g_matrix;
+                intention_force = forceControl.update(Ws);
+                tao = intention_force + g_matrix;
+                // tao = forceControl.update(Ws) + g_matrix;
                 // ROS_WARN_STREAM("Up=" << tao - g_matrix);
             }
+
+            ws_msg.data = Ws;
+            intention_msg.data = intention_force;
+            compensation_msg.data = compensation_force;
+
+            ws_pub.publish(ws_msg);
+            // ws_N_pub.publish(ws_N_msg);
+            intention_pub.publish(intention_msg);
+            compensation_pub.publish(compensation_msg);
 
             // if(std::abs(tao-g_matrix) >= torque_limit){
             //     if (signbit(tao-g_matrix)){

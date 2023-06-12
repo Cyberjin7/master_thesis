@@ -16,9 +16,12 @@
     <arg name="LOADING_TYPE" default="false"/>
     <arg name="LOADING_TRIAL" default="false"/>
     <arg name="FORCE" default="false"/>
+    <arg name="KP" default="false"/>
+    <arg name="LISTEN" default="true"/>
     <node pkg="experiment" type="experiment_recorder" name="bag_recorder" output="screen"> 
         <param  name="save_dir" value="$(arg DIR)" type="string"/>
         <param  name="subject" value="$(arg SUBJECT)" type="string"/>
+        <param name="listen" value="$(arg LISTEN)" type="bool"/>
         <param name="q_sync" value="$(arg Q_SYNC)" type="bool"/>
         <param name="q_ref_sync" value="$(arg Q_REF_SYNC)" type="bool"/>
         <param name="exp" value="$(arg EXP)" type="bool"/>

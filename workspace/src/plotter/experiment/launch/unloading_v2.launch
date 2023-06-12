@@ -17,5 +17,7 @@
         <arg name="COMPENSATION" value="true"/>
         <arg name="INTENTION" value="true"/>
         <arg name="FORCE" value="true"/>
+        <arg name="KP" value="true"/>
+        <arg name="LISTEN" value="false"/>
     </include>
 </launch>

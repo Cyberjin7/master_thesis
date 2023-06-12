@@ -1,5 +1,6 @@
 #include "ros/ros.h"
 #include "experiment_srvs/Trigger.h"
+#include "experiment_srvs/AngleChange.h"
 #include "std_srvs/Empty.h"
 #include "sync_msgs/MassTrial.h"
 #include "sync_msgs/TrialType.h"
@@ -15,6 +16,15 @@ bool recordCallback(std_srvs::Empty::Request& req, std_srvs::Empty::Response& re
     *time = ros::Time::now();
     *init = true;
     return true;
+}
+
+void sendAngle(ros::ServiceClient& client, std::string type, double angle)
+{
+    if(type.compare("rest") == 0){
+        experiment_srvs::AngleChange change_request;
+        change_request.request.angle.data = angle;
+        client.call(change_request);
+    }
 }
 
 int main(int argc, char **argv)
@@ -41,6 +51,9 @@ int main(int argc, char **argv)
     ros::param::get("~loading_time", loading_time);
     ros::param::get("~unloading_time", unloading_time);
     ros::param::get("~resting_time", resting_time);
+
+    double start_position;
+    ros::param::get("~start_position", start_position);
 
     std::vector<std::string> time_order;
     ros::param::get("~order", time_order);
@@ -101,9 +114,12 @@ int main(int argc, char **argv)
     ros::ServiceServer start_server = n.advertiseService<std_srvs::Empty::Request, std_srvs::Empty::Response>("toggle_experiment", boost::bind(recordCallback,_1,_2, &record_client, &start, &start_time, &init)); // making a class would be better
     ros::Publisher trial_pub = n.advertise<sync_msgs::MassTrial>("load_trial", 1);
     ros::Publisher type_pub = n.advertise<sync_msgs::TrialType>("load_type", 1);
+    ros::ServiceClient angle_client = n.serviceClient<experiment_srvs::AngleChange>("change_angle_request");
 
     sync_msgs::MassTrial trial_msg;
     sync_msgs::TrialType type_msg;
+
+    experiment_srvs::AngleChange angle_request;
 
     while(ros::ok()){
         current_time = ros::Time::now();
@@ -115,6 +131,12 @@ int main(int argc, char **argv)
 
                 type_msg.header.stamp = start_time;
                 type_msg.type = time_order[order_it];
+
+                // if(time_order[order_it].compare("rest") == 0){
+                //     angle_request.request.angle.data = start_position;
+                //     angle_client.call(angle_request);
+                // }
+                sendAngle(angle_client, time_order[order_it], start_position);
 
                 trial_pub.publish(trial_msg);
                 type_pub.publish(type_msg);
@@ -148,6 +170,8 @@ int main(int argc, char **argv)
                         }
                         
                     }
+
+                    sendAngle(angle_client, time_order[order_it], start_position);
 
                     type_msg.header.stamp = current_time;
                     type_msg.type = time_order[order_it];

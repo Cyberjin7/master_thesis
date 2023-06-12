@@ -52,6 +52,7 @@ add_message_files(
   FILES
   q.msg
   state.msg
+  calibration.msg
 )
 
 ## Generate services in the 'srv' folder

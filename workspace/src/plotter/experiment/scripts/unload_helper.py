@@ -8,7 +8,7 @@ def trialCallback(data):
     pass
 
 def typeCallback(data):
-    print(data.type)
+    # print(data.type)
     if data.type == "rest":
         sinewave = SineWave(pitch=10, decibels=10)
         sinewave.play()
