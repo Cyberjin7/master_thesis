@@ -8,19 +8,19 @@ def trialCallback(data):
     pass
 
 def typeCallback(data):
-    # print(data.type)
+    print(data.type)
     if data.type == "rest":
         sinewave = SineWave(pitch=10, decibels=10)
         sinewave.play()
         time.sleep(0.5)
         sinewave.stop()
     elif data.type =="load":
-        sinewave = SineWave(pitch=12, decibels=10)
+        sinewave = SineWave(pitch=15, decibels=10)
         sinewave.play()
         time.sleep(0.5)
         sinewave.stop()
     elif data.type == "unload":
-        sinewave = SineWave(pitch=11, decibels=10)
+        sinewave = SineWave(pitch=14, decibels=10)
         sinewave.play()
         time.sleep(0.5)
         sinewave.stop()
