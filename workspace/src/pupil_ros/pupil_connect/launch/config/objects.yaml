@@ -6,5 +6,6 @@ objects:
     mouse: 0.1,
     book: 0.2,
     tvmonitor: 1.0,
-    keyboard: 0.2
+    keyboard: 0.2,
+    remote: 0.1
   }

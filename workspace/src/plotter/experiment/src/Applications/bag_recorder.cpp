@@ -145,7 +145,7 @@ namespace bagRecorder
     {
         if(bagRecorder::record)
         {
-            bagRecorder::bag.write("mass_change", ros::Time::now(), msg);
+            bagRecorder::bag.write("held_object", ros::Time::now(), msg);
         }
     }
 
@@ -407,9 +407,9 @@ int main(int argc, char **argv)
         ROS_INFO_STREAM("Subbed to: emg_data");
     }
     if(mass_change){
-        mass_change_sub = n.subscribe("mass_change", 60, bagRecorder::massChangeCallback);
+        mass_change_sub = n.subscribe("mass_change", 100, bagRecorder::massChangeCallback);
         ROS_INFO_STREAM("Subbed to: mass_change");
-        hold_sub = n.subscribe("holding_object", 60, bagRecorder::holdingCallback);
+        hold_sub = n.subscribe("holding_object", 100, bagRecorder::holdingCallback);
     }
     if(calibration){
         down_cal_sub = n.subscribe("down_cal", 100, bagRecorder::downCalCallback);

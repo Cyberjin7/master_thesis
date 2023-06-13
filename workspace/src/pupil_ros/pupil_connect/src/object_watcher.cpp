@@ -313,12 +313,23 @@ bool ObjectEyer::initialized()
 
 void ObjectEyer::mass_request(std::string target_object)
 {
-    this->change_mass_request.request.mass.data = this->object_mass_list[target_object];
-    this->mass_client.call(this->change_mass_request);
-    this->mass_change.header.stamp = ros::Time::now();
-    this->mass_change.object = target_object;
-    this->mass_change.mass = this->object_mass_list[target_object];
-    this->mass_change_pub.publish(this->mass_change);
+    if(this->object_mass_list.find(target_object) == this->object_mass_list.end()){
+        ROS_WARN_STREAM("No mass for this object");
+    }
+    else{
+        this->change_mass_request.request.mass.data = this->object_mass_list[target_object];
+        this->mass_client.call(this->change_mass_request);
+        this->mass_change.header.stamp = ros::Time::now();
+        this->mass_change.object = target_object;
+        this->mass_change.mass = this->object_mass_list[target_object];
+        this->mass_change_pub.publish(this->mass_change);
+    }
+    // this->change_mass_request.request.mass.data = this->object_mass_list[target_object];
+    // this->mass_client.call(this->change_mass_request);
+    // this->mass_change.header.stamp = ros::Time::now();
+    // this->mass_change.object = target_object;
+    // this->mass_change.mass = this->object_mass_list[target_object];
+    // this->mass_change_pub.publish(this->mass_change);
 }
 
 void ObjectEyer::mass_request(double target_mass)
