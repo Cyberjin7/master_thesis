@@ -133,6 +133,14 @@ namespace bagRecorder
         }
     }
 
+    void emgRawCallback(const std_msgs::Float64MultiArray::ConstPtr& msg)
+    {
+        if(bagRecorder::record)
+        {
+            bagRecorder::bag.write("emg_raw", ros::Time::now(), msg);
+        }
+    }
+
     void massChangeCallback(const sync_msgs::MassTrial::ConstPtr& msg)
     {
         if(bagRecorder::record)
@@ -356,6 +364,7 @@ int main(int argc, char **argv)
     ros::Subscriber state_sync_sub;
     ros::Subscriber mass_trial_sub; 
     ros::Subscriber emg_sub;
+    ros::Subscriber emg_raw_sub;
     ros::Subscriber mass_change_sub;
     // ros::Subscriber calibration_sub;
     ros::Subscriber down_cal_sub;
@@ -404,6 +413,7 @@ int main(int argc, char **argv)
     }
     if(emg){
         emg_sub = n.subscribe("rms_samples", 100, bagRecorder::emgCallback);
+        emg_raw_sub = n.subscribe("emg_imu_data", 500, bagRecorder::emgRawCallback);
         ROS_INFO_STREAM("Subbed to: emg_data");
     }
     if(mass_change){
@@ -419,7 +429,7 @@ int main(int argc, char **argv)
     }
     if(compensation){
         compensation_sub = n.subscribe("compensation", 100, bagRecorder::compensationCallback);
-        ROS_INFO_STREAM("Subbed to: calibration");
+        ROS_INFO_STREAM("Subbed to: compensation");
     }
     if(intention){
         intention_sub = n.subscribe("intention", 100, bagRecorder::intentionCallback);

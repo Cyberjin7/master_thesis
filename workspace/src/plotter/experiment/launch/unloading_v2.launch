@@ -1,5 +1,6 @@
 <launch>
     <arg name="RECORD" default="true"/>
+    <arg name="NAME" default="trial"/>
     <node pkg="experiment" type="experiment_unload_time" name="unloading_experiment" output="screen">
         <rosparam command="load" file="$(find pupil_connect)/launch/config/objects.yaml"/>
         <rosparam command="load" file="$(find experiment)/launch/config/unloading.yaml"/>
@@ -10,6 +11,7 @@
     </node>
     <node pkg="experiment" type="unload_helper.py" name="unload_helper" output="screen"/>
     <include file="$(find experiment)/launch/record.launch" if="$(arg RECORD)">
+        <arg name="SUBJECT" value ="$(arg NAME)"/>
         <arg name="STATE" value="true"/>
         <arg name="MASS_CHANGE" value="true"/>
         <arg name="EMG" value="true"/>

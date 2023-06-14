@@ -3,8 +3,8 @@ block: 5
 targets:
   - "bottle"
   # - "cup"
-loading_time: 5 # 6 
+loading_time: 9 # 6 
 unloading_time: 3
-resting_time: 5 # 5
-start_position: 90
+resting_time: 3 # 5
+start_position: 110
 order: ["rest", "load", "unload"]

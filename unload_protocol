@@ -1,0 +1,15 @@
+Unloading Experiment Protocol
+
+EMG
+1. MVC RECORDING DON'T FORGET
+
+Exoskeleton
+1. Collect data separately for calibration procedure and kp adjustment. Call it calibration + number
+2. Don't forget to open plotjuggler to assess kp adjustment
+3. For compensation kp adjustment: turn on prediction mode and cheat mode
+4. Change mass to mass of target object. Adjust kp until sensor value and compensation torque roughly match. 
+5. Do not forget to change mass back to 0
+
+Eye Tracking
+1. Don't forget to start the object watching node. But start it as late as possible (aka right before trial begins)
+2. Do not forget to adjust the front facing camera to match holding an object

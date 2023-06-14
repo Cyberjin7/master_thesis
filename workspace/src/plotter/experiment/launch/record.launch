@@ -1,5 +1,5 @@
 <launch>
-    <arg name="DIR" default="$(find experiment)/launch/bag/unloading"/>
+    <arg name="DIR" default="$(find experiment)/launch/bag/unloading/06_14_nat_unloading"/>
     <arg name="SUBJECT" default="90_baseline"/>
     <arg name="Q_SYNC" default="false"/>
     <arg name="Q_REF_SYNC" default="false"/>
@@ -37,6 +37,7 @@
         <param name="load_type" value="$(arg LOADING_TYPE)" type="bool"/>
         <param name="load_trial" value="$(arg LOADING_TRIAL)" type="bool"/>
         <param name="force" value="$(arg FORCE)" type="bool"/>
+        <param name="kp" value="$(arg KP)" type="bool"/>
         <rosparam command="load" file="$(find experiment)/launch/config/exp_param.yaml"/>
     </node>
 </launch>
