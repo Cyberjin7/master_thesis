@@ -13,3 +13,109 @@ Exoskeleton
 Eye Tracking
 1. Don't forget to start the object watching node. But start it as late as possible (aka right before trial begins)
 2. Do not forget to adjust the front facing camera to match holding an object
+
+
+
+For: bottle of mass 0.5kg
+
+
+PC:
+1. soruce init_master
+2. roscore
+
+Delsys:
+Connect delsys system
+Reference electrode on chest
+A sensor on bicep
+
+Delsys Computer:
+1. source init_slave (change IPs as necessary)
+2. roscore
+3. second terminal: 
+	source init_slave	
+	rosrun emg_stream Start_Avanti_1Sensor.py
+4. third terminal:
+	source init_slave
+	rosrun emg_stream 1_Avanti_compute_emg_features.py
+
+Wear eye tracker before wearing exo. Have the person wear the eye tracker themselves as putting it on for them is uncomfortable for them
+
+Wear elbow exoskeleton
+Ask if shoulder brace is supporting properly. Have subject adjust themselves as needed. 
+Loosely fasten exoskeleton but still tightly enough such that exoskeleton is flush with skin. Have subject move arm. Adjust exo position as needed until comfortable.
+
+In plotter/experiment/launch/record.launch, change DIR to where you wish to store recorded data
+In plotter/experiment/launch/unload_v2.launch, you can adjust whether to record data or not and the name of the file. Alternatively, you can change these via commandline which is also the recommended method. 
+
+Exoskeleton Calibration
+1. Turn on exoskeleton: unblock emergency button
+2. terminal 1:
+	source init_master
+	rosrun rosserial_python serial_node.py /dev/ttyACM0
+3. terminal 2:
+	source init_master
+	roslaunch skin_control skin_driver.launch
+4. terminal 3:
+	source init_master
+	roslaunch skin_control skin_control.launch
+5. terminal 4: 
+	source init_master
+	roslaunch experiment unloading_v2.launch NAME=:"calibrationX"
+6. terminal 5: 
+	source init_master
+	roslaunch exo_control exo_control.launch
+7. There are 4 values that must be calibrated: force sensor readings, gain for up and down control and gain for compensation torque
+8. First to calibrate is force sensor readings: press enter in terminal 5 to start calibration
+9. Now to calibrate the control of the arm: In terminal 5, type: up: <some_value> or down: <some_value> to change the gain values for up and down control. Initial gain values are set in control_params.yaml. Progressively increase or decrease the gains while asking the subject to move their arm and assessing whether the exoskeleton is properly following the subject's intentions
+10. For compensation gain calibration:
+11.a. In terminal 5, type c and [enter] and p and [enter]. This turns off the upper sensors and activates predictive mode of exo control.
+11.b. terminal 6:
+	source init_master
+	rosservice call /change_mass_request "mass: data: <mass of target_object>"
+	*It is recommended to autcomplete the above command for proper syntax
+12. In terminal 5, type: comp: <some_value> to adjust gain. Initial value is given in control_params.yaml
+13. To help with assessment:
+14. terminal 7:
+	source init_master
+	rosrun plot_juggler plot_juggler
+15. In plotjuggler, load the layout unload_exp.xml in /workspace for a preset layout to assess intention_force vs compensation torque
+16. Ideally, when the bottle is placed on the subject's arm, the intention force created should roughly match the compensation torque. Adjust the compensation gain until this behavior is seen
+17. If this is done, the calibration for the exo is done. 
+18. Do not forget to set mass to 0 again: rosservice call /change_mass_request "mass: data: 0.0" in terminal 6
+19. In terminal 4, press q and [ctrl]+c to quit the node. This will be the rosbag where the calibration values are saved
+
+
+Eye tracking + Object Detection + Hand Detection
+1. Start pupil capture from source:
+	source pupil_v/bin/activate
+	source capture_settings/plugins/ros_msgs/devel/setup.bash
+	python pupil_src/main.py capture
+2. Adjust eye cameras. Ask subject to move eyes around until 3D model outline fits with eye ball (dark blue outline)
+3. Ask subject to take on experiment position (sitting upright with left elbow at 90 degrees. Ask subject to look down at hand. Ask them to move their head slightly if necessary. The full hand should be visible in the camera. Adjust front facing camera if necessary. It is beneficial to set it at a slightly downward angle.
+4. Calibrate gaze using monitor. Subject might have to tilt head slightly upwards for calibration
+5. terminal 8:
+	source venv/bin/activate 
+	source init_master
+	roslaunch pupil_connect object_detector.launch
+6. terminal 9:
+	source venv/bin/activate
+	source init_master
+	roslaunch pupil_connect hand_detector.py
+7. terminal 10:
+	source venv/bin/activate
+	source init_master
+	roslaunch pupil_connect object_watching.launch
+	
+	
+Experiment
+1. In terminal 4: roslaunch experiment unload_v2.launch NAME:="trialX"
+2. Ask subject to keep gaze at bottle at all times
+3. Press [ENTER] to start experiment
+4. In the terminal, rest, load, unload will show up on screen with corresponding sounds playing.
+5. Place bottle in subject's hand when load is shown. Remove when unload shows. Wait during rest.
+
+Do same experiment without exoskeleton
+
+
+
+
