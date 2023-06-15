@@ -432,7 +432,7 @@ int main(int argc, char **argv)
         ROS_INFO_STREAM("Subbed to: compensation");
     }
     if(intention){
-        intention_sub = n.subscribe("intention", 100, bagRecorder::intentionCallback);
+        intention_sub = n.subscribe("intention_force", 100, bagRecorder::intentionCallback);
         ROS_INFO_STREAM("Subbed to: intention");
     }
     if(load_type){
