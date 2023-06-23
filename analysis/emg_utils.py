@@ -42,16 +42,20 @@ def draw_background(axis, type_array, rms_array, min, max):
     return rest_fill, load_fill, unload_fill
 
 
-def plot_overview(trial_type, emg, state, mass, window, mvc):
-    plt.close('all')
+def plot_overview(trial_type, emg, state, mass, window, mvc, limits):
+    # plt.close('all')
     fig, ax = plt.subplots(3,1)
+
+    zero = pd.Series([0])
+    max_mass = mass['mass'].max()
+    mass_limit = 0.95
 
     # EMG
     ax[0].plot(emg['Time'].iloc[:-window] - emg['Time'].iloc[0], compute_RMS(emg['data_0'], window)/mvc, linewidth=1)
-    compensation, = ax[0].step(mass['Time'] - emg['Time'].iloc[0], mass['mass']*0.5, where='post', linewidth=0.4, color='red', label='Compensation')
-    rest, load, unload = draw_background(ax[0], trial_type, emg, 0, 1)
+    compensation, = ax[0].step(pd.concat([zero, mass['Time'] - emg['Time'].iloc[0]]), pd.concat([zero, mass['mass']*mass_limit*limits[0][1]/max_mass]), where='post', linewidth=0.4, color='red', label='Compensation')
+    rest, load, unload = draw_background(ax[0], trial_type, emg, limits[0][0], limits[0][1])
 
-    ax[0].set_ylim([0.03, 0.3])
+    ax[0].set_ylim(limits[0])
     ax[0].set_xlim([trial_type['Time'].iloc[0] - emg['Time'].iloc[0], emg['Time'].iloc[-window-1] - emg['Time'].iloc[0]])
     # ax[0].set_title('EMG Predictive Exo Support')
     ax[0].set_ylabel('Normalized EMG')
@@ -61,18 +65,22 @@ def plot_overview(trial_type, emg, state, mass, window, mvc):
 
     # q
     ax[1].plot(state['Time'] - state['Time'][0], state['q_state.q'], linewidth=1)
-    ax[1].step(mass['Time'] - emg['Time'].iloc[0], mass['mass']*230, where='post', linewidth=0.4, color='red', label='Compensation')
-    draw_background(ax[1], trial_type, state, 0, 120)
+    ax[1].step(pd.concat([zero, mass['Time'] - emg['Time'].iloc[0]]), pd.concat([zero, mass['mass']*mass_limit*limits[1][1]/max_mass]), where='post', linewidth=0.4, color='red', label='Compensation')
+    draw_background(ax[1], trial_type, state, limits[1][0], limits[1][1])
     ax[1].set_xlim([trial_type['Time'].iloc[0] - emg['Time'].iloc[0], emg['Time'].iloc[-window-1] - emg['Time'].iloc[0]])
-    ax[1].set_ylim([50, 120])
+    ax[1].set_ylim(limits[1])
     ax[1].set_ylabel('q (deg)')
 
     # tau
     ax[2].plot(state['Time'] - state['Time'][0], state['tau'], linewidth=1)
-    compensation, = ax[2].step(mass['Time'] - emg['Time'].iloc[0], mass['mass']*1.15 - 0.4, where='post', linewidth=0.4, color='red', label='Compensation')
-    rest, load, unload = draw_background(ax[2], trial_type, state, -2, 0.2)
+    # compensation, = ax[2].step(pd.concat([zero, mass['Time'] - emg['Time'].iloc[0]]), pd.concat([zero-limits[2][0], mass['mass']*mass_limit*(limits[2][1]-limits[2][0])/max_mass-limits[2][0]]), where='post', linewidth=0.4, color='red', label='Compensation')
+    compensation, = ax[2].step(pd.concat([zero, mass['Time'] - emg['Time'].iloc[0]]), 
+                               pd.concat([zero - abs(limits[2][0]), mass['mass']*mass_limit*(limits[2][1] - limits[2][0])/max_mass - abs(limits[2][0])]), 
+                               where='post', linewidth=0.4, color='red', label='Compensation')
+
+    rest, load, unload = draw_background(ax[2], trial_type, state, limits[2][0], limits[2][1])
     ax[2].set_xlim([trial_type['Time'].iloc[0] - emg['Time'].iloc[0], emg['Time'].iloc[-window-1] - emg['Time'].iloc[0]])
-    ax[2].set_ylim([-0.4, 0.2])
+    ax[2].set_ylim(limits[2])
     ax[2].set_ylabel('Torque (Nm)')
     ax[2].set_xlabel('Time (s)')
     ax[2].legend([rest, load, unload, compensation], ['Rest', 'Load', 'Unload', 'Compensation'], frameon=True, ncol=4, loc="lower right")
@@ -96,7 +104,8 @@ def single_EMG(ax, trial_type, emg, window, plot_prediction, mass, min, max, mvc
     if plot_prediction:
         max_mass = mass['mass'].max()
         mass_limit = 0.9
-        compensation, = ax.step(mass['Time'] - emg['Time'].iloc[0], mass['mass']*mass_limit*max/max_mass, where='post', linewidth=0.4, color='red', label='Compensation')
+        zero = pd.Series([0])
+        compensation, = ax.step(pd.concat([zero, mass['Time'] - emg['Time'].iloc[0]]), pd.concat([zero, mass['mass']*mass_limit*max/max_mass]), where='post', linewidth=0.4, color='red', label='Compensation')
         ax.legend([rest, load, unload, compensation], ['Rest', 'Load', 'Unload', 'Compensation'], frameon=True, ncol=4)
     else:
         ax.legend([rest, load, unload], ['Rest', 'Load', 'Unload'], frameon=True, ncol=3)
