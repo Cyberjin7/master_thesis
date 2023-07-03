@@ -143,7 +143,7 @@ def plot_average(axis, emg_list, type_list, window, min, max, mvc):
         filtered_emg_data.append(filtered_data.iloc[:shortest.size].to_numpy())
 
     avg_emg = (filtered_emg_data[0] + filtered_emg_data[1] + filtered_emg_data[2])/3
-    window = 25
+    # window = 25
     axis.plot(shortest.iloc[:-window] - shortest_loads['Time'].iloc[0], compute_RMS(avg_emg, window)/mvc, linewidth=0.75)
 
     axis.set_xlim([0, shortest.iloc[-window] - shortest_loads['Time'].iloc[0]])
