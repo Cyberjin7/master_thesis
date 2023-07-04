@@ -202,8 +202,47 @@ def calculate_average(type_data, emg_data, mvc):
             filter_data = emg_data['data_0'][filter_time.index].to_numpy()/mvc
         else:
             filter_time = emg_data['Time'][emg_data['Time'] >= type_data['Time'].iloc[i]]
-            filter_time = emg_data['Time'][emg_data['Time'] < type_data['Time'].iloc[i+1]]
+            # filter_time = emg_data['Time'][emg_data['Time'] < type_data['Time'].iloc[i+1]]
+            filter_time = filter_time[emg_data['Time'] < type_data['Time'].iloc[i+1]]
             filter_data = emg_data['data_0'][filter_time.index].to_numpy()/mvc
+
+        if type_data['type'].iloc[i] == 'rest':
+            rest_emg = np.concatenate((rest_emg, filter_data))
+        elif type_data['type'].iloc[i] == 'load':
+            load_emg = np.concatenate((load_emg, filter_data))
+        elif type_data['type'].iloc[i] == 'unload':
+            unload_emg = np.concatenate((unload_emg, filter_data))
+
+    rest_avg = np.mean(rest_emg)
+    load_avg = np.mean(load_emg)
+    unload_avg = np.mean(unload_emg)
+
+    rest_var = np.var(rest_emg)
+    load_var = np.var(load_emg)
+    unload_var = np.var(unload_emg)
+
+    return rest_avg, load_avg, unload_avg, rest_var, load_var, unload_var
+
+def calculate_average_rms(type_data, emg_data, mvc, window_length):
+    rest_emg = np.array([])
+    load_emg = np.array([])
+    unload_emg = np.array([])
+
+    for i in range(type_data['Time'].size):
+        filter_time = None
+        filter_data = None
+        if i == type_data['Time'].size - 1:
+            filter_time = emg_data['Time'][emg_data['Time'] >= type_data['Time'].iloc[i]]
+            # print(filter_time)
+            filter_data = compute_RMS(emg_data['data_0'][filter_time.index], window_length)/mvc
+        else:
+            filter_time = emg_data['Time'][emg_data['Time'] >= type_data['Time'].iloc[i]]
+            # print(filter_time)
+            # filter_time = emg_data['Time'][emg_data['Time'] < type_data['Time'].iloc[i+1]]
+            filter_time = filter_time[emg_data['Time'] < type_data['Time'].iloc[i+1]]
+            filter_data = compute_RMS(emg_data['data_0'][filter_time.index], window_length)/mvc
+
+        # print(filter_time.index)
 
         if type_data['type'].iloc[i] == 'rest':
             rest_emg = np.concatenate((rest_emg, filter_data))
@@ -242,6 +281,24 @@ def calculate_average_all(type_list, emg_list, mvc):
 
     return rest_avg_list, load_avg_list, unload_avg_list, rest_var_list, load_var_list, unload_var_list
 
+def calculate_average_rms_all(type_list, emg_list, mvc, window_length):
+    rest_avg_list = []
+    load_avg_list = []
+    unload_avg_list = []
+    rest_var_list = []
+    load_var_list = []
+    unload_var_list = []
+    for i in range(len(type_list)):
+        rest_avg, load_avg, unload_avg, rest_var, load_var, unload_var = calculate_average_rms(type_list[i], emg_list[i], mvc, window_length)
+        rest_avg_list.append(rest_avg)
+        load_avg_list.append(load_avg)
+        unload_avg_list.append(unload_avg)
+        rest_var_list.append(rest_var)
+        load_var_list.append(load_var)
+        unload_var_list.append(unload_var)
+
+    return rest_avg_list, load_avg_list, unload_avg_list, rest_var_list, load_var_list, unload_var_list
+
 
 def load_rest_ratio(load_list, rest_list):
     ratio_list = []
@@ -249,3 +306,212 @@ def load_rest_ratio(load_list, rest_list):
         ratio_list.append(load_list[i]/rest_list[i])
 
     return ratio_list
+
+def load_rest_diff(load_list, rest_list):
+    diff_list = []
+    for i in range(len(load_list)):
+        diff_list.append(load_list[i] - rest_list[i])
+
+    return diff_list
+
+def calculate_average_trial(type_data, emg_data, mvc):
+
+    rest_emg = []
+    load_emg = []
+    unload_emg = []
+
+    for i in range(type_data['Time'].size):
+        filter_time = None
+        filter_data = None
+        if i == type_data['Time'].size - 1:
+            filter_time = emg_data['Time'][emg_data['Time'] >= type_data['Time'].iloc[i]]
+            filter_data = emg_data['data_0'][filter_time.index].to_numpy()/mvc
+        else:
+            filter_time = emg_data['Time'][emg_data['Time'] >= type_data['Time'].iloc[i]]
+            # filter_time = emg_data['Time'][emg_data['Time'] < type_data['Time'].iloc[i+1]]
+            filter_time = filter_time[emg_data['Time'] < type_data['Time'].iloc[i+1]]
+            filter_data = emg_data['data_0'][filter_time.index].to_numpy()/mvc
+
+        if type_data['type'].iloc[i] == 'rest':
+            rest_emg.append(filter_data)
+        elif type_data['type'].iloc[i] == 'load':
+            load_emg.append(filter_data)
+        elif type_data['type'].iloc[i] == 'unload':
+            unload_emg.append(filter_data)
+
+    shortest_load = load_emg[0].size
+    for i in range(1, len(load_emg)):
+        current_load = load_emg[i].size
+        if current_load < shortest_load:
+            shortest_load = current_load
+
+    shortest_rest = rest_emg[0].size
+    for i in range(1, len(rest_emg)):
+        current_rest = rest_emg[i].size
+        if current_rest < shortest_rest:
+            shortest_rest = current_rest
+    
+    shortest_unload = unload_emg[0].size
+    for i in range(1, len(unload_emg)):
+        current_unload = unload_emg[i].size
+        if current_unload < shortest_unload:
+            shortest_unload = current_unload
+
+    for i in range(len(load_emg)):
+        load_emg[i] = load_emg[i][:shortest_load]
+
+    for i in range(len(unload_emg)):
+        unload_emg[i] = unload_emg[i][:shortest_unload]
+
+    for i in range(len(rest_emg)):
+        rest_emg[i] = rest_emg[i][:shortest_rest]
+
+    rest_stack = np.stack(rest_emg)
+    load_stack = np.stack(load_emg)
+    unload_stack = np.stack(unload_emg)
+
+    return rest_stack, load_stack, unload_stack
+
+def calculate_rms_average_trial(type_data, emg_data, mvc, window_length):
+
+    rest_emg = []
+    load_emg = []
+    unload_emg = []
+
+    for i in range(type_data['Time'].size):
+        filter_time = None
+        filter_data = None
+        if i == type_data['Time'].size - 1:
+            filter_time = emg_data['Time'][emg_data['Time'] >= type_data['Time'].iloc[i]]
+            filter_data = emg_data['data_0'][filter_time.index].to_numpy()/mvc
+        else:
+            filter_time = emg_data['Time'][emg_data['Time'] >= type_data['Time'].iloc[i]]
+            filter_time = filter_time[emg_data['Time'] < type_data['Time'].iloc[i+1]]
+            filter_data = emg_data['data_0'][filter_time.index].to_numpy()/mvc
+
+        if type_data['type'].iloc[i] == 'rest':
+            rest_emg.append(filter_data)
+        elif type_data['type'].iloc[i] == 'load':
+            load_emg.append(filter_data)
+        elif type_data['type'].iloc[i] == 'unload':
+            unload_emg.append(filter_data)
+
+    shortest_load = load_emg[0].size
+    for i in range(1, len(load_emg)):
+        current_load = load_emg[i].size
+        if current_load < shortest_load:
+            shortest_load = current_load
+
+    shortest_rest = rest_emg[0].size
+    for i in range(1, len(rest_emg)):
+        current_rest = rest_emg[i].size
+        if current_rest < shortest_rest:
+            shortest_rest = current_rest
+    
+    shortest_unload = unload_emg[0].size
+    for i in range(1, len(unload_emg)):
+        current_unload = unload_emg[i].size
+        if current_unload < shortest_unload:
+            shortest_unload = current_unload
+
+    for i in range(len(load_emg)):
+        load_emg[i] = load_emg[i][:shortest_load]
+
+    for i in range(len(unload_emg)):
+        unload_emg[i] = unload_emg[i][:shortest_unload]
+
+    for i in range(len(rest_emg)):
+        rest_emg[i] = rest_emg[i][:shortest_rest]
+
+    rest_stack = np.stack(rest_emg)
+    load_stack = np.stack(load_emg)
+    unload_stack = np.stack(unload_emg)
+
+    emg_stack = np.hstack((rest_stack, load_stack, unload_stack))
+
+    emg_list = []
+
+    for i in range(emg_stack.shape[0]):
+        emg_list.append(compute_RMS(emg_stack[i], window_length))
+
+    rms_stack = np.stack(emg_list)
+
+
+    # return rest_stack, load_stack, unload_stack
+    return rms_stack
+
+
+def plot_average_trial(axis, trial_type, emg, mvc, window_length, ylimits):
+    rest_stack, load_stack, unload_stack = calculate_average_trial(trial_type, emg, mvc)
+
+    rest_avg = np.mean(rest_stack, axis=0)
+    rest_var = np.var(rest_stack, axis=0)
+
+    load_avg = np.mean(load_stack, axis=0)
+    load_var = np.var(load_stack, axis=0)
+
+    unload_avg = np.mean(unload_stack, axis=0)
+    unload_var = np.var(unload_stack, axis=0)
+
+    loading_time = 9 # 6 
+    unloading_time = 3
+    resting_time = 3 # 5
+
+    emg_sequence = compute_RMS(np.concatenate((rest_avg, load_avg, unload_avg)), window_length)
+    time = np.linspace(0, loading_time + unloading_time + resting_time, emg_sequence.size)
+    axis.plot(time, emg_sequence, linewidth=0.75)
+
+    axis.fill_between([0, resting_time], 0, 1, alpha=0.2, color='blue', label='Rest')
+    axis.fill_between([resting_time, resting_time+loading_time], 0, 1, alpha=0.2, color='green', label='Load')
+    axis.fill_between([resting_time+loading_time, resting_time+loading_time+unloading_time], 0, 1, alpha=0.2, color='yellow', label='Unload')
+
+
+
+    axis.fill_between(np.linspace(0, resting_time, num=rest_avg.size), rest_avg-rest_var, rest_avg+rest_var,alpha=0.5)
+    axis.fill_between(np.linspace(resting_time, resting_time+loading_time, num=load_avg.size), load_avg-load_var, load_avg+load_var,alpha=0.5)
+    axis.fill_between(np.linspace(resting_time+loading_time, resting_time+loading_time+unloading_time, num=unload_avg.size), unload_avg-unload_var, unload_avg+unload_var,alpha=0.5)
+
+    axis.set_xlim([0, loading_time + unloading_time + resting_time])
+    axis.set_ylim(ylimits)
+
+def plot_rms_average_trial(axis, trial_type, emg, mvc, window_length, ylimits):
+    loading_time = 9 # 6 
+    unloading_time = 3
+    resting_time = 3 # 5
+
+    # rest_stack, load_stack, unload_stack = calculate_rms_average_trial(trial_type, emg, mvc, window_length)
+
+    rms_stack = calculate_rms_average_trial(trial_type, emg, mvc, window_length)
+
+    rms_avg = np.mean(rms_stack, axis=0)
+    rms_var = np.var(rms_stack, axis=0)
+
+    time = np.linspace(0, loading_time + unloading_time + resting_time, rms_avg.size)
+    axis.plot(time, rms_avg, linewidth=0.75)
+    axis.fill_between(time, rms_avg-rms_var, rms_avg+rms_var, alpha=0.5)
+
+    # rest_avg = np.mean(rest_stack, axis=0)
+    # rest_var = np.var(rest_stack, axis=0)
+
+    # load_avg = np.mean(load_stack, axis=0)
+    # load_var = np.var(load_stack, axis=0)
+
+    # unload_avg = np.mean(unload_stack, axis=0)
+    # unload_var = np.var(unload_stack, axis=0)
+
+    # emg_sequence = np.concatenate((rest_avg, load_avg, unload_avg))
+    # time = np.linspace(0, loading_time + unloading_time + resting_time, emg_sequence.size)
+    # axis.plot(time, emg_sequence, linewidth=0.75)
+
+    axis.fill_between([0, resting_time], 0, 1, alpha=0.2, color='blue', label='Rest')
+    axis.fill_between([resting_time, resting_time+loading_time], 0, 1, alpha=0.2, color='green', label='Load')
+    axis.fill_between([resting_time+loading_time, resting_time+loading_time+unloading_time], 0, 1, alpha=0.2, color='yellow', label='Unload')
+
+
+
+    # axis.fill_between(np.linspace(0, resting_time, num=rest_avg.size), rest_avg-rest_var, rest_avg+rest_var,alpha=0.5)
+    # axis.fill_between(np.linspace(resting_time, resting_time+loading_time, num=load_avg.size), load_avg-load_var, load_avg+load_var,alpha=0.5)
+    # axis.fill_between(np.linspace(resting_time+loading_time, resting_time+loading_time+unloading_time, num=unload_avg.size), unload_avg-unload_var, unload_avg+unload_var,alpha=0.5)
+
+    # axis.set_xlim([0, loading_time + unloading_time + resting_time])
+    axis.set_ylim(ylimits)
