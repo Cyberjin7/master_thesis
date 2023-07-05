@@ -486,14 +486,20 @@ def plot_rms_average_trial(axis, trial_type, emg, mvc, window_length, ylimits, a
     rms_avg = np.mean(rms_stack, axis=0)
     rms_var = np.std(rms_stack, axis=0)
 
+    trial_plots = []
+    trial_labels = []
+
     time = np.linspace(0, loading_time + unloading_time + resting_time, rms_avg.size)
     if not all:
         axis.plot(time, rms_avg, linewidth=0.75)
-        # axis.fill_between(time, rms_avg-rms_var, rms_avg+rms_var, alpha=0.4)
-        axis.fill_between(time, np.max(rms_stack, axis=0), np.min(rms_stack, axis=0), alpha=0.3)
+        axis.fill_between(time, rms_avg-rms_var, rms_avg+rms_var, alpha=0.3)
+        # axis.fill_between(time, np.max(rms_stack, axis=0), np.min(rms_stack, axis=0), alpha=0.3)
     else:
         for i in range(rms_stack.shape[0]):
-            axis.plot(time, rms_stack[i], linewidth=0.75)
+            trial_plot, = axis.plot(time, rms_stack[i], linewidth=0.75)
+            trial_plots.append(trial_plot)
+            label = 'trial' + str(i+1)
+            trial_labels.append(label)
 
     # rest_avg = np.mean(rest_stack, axis=0)
     # rest_var = np.var(rest_stack, axis=0)
@@ -512,7 +518,10 @@ def plot_rms_average_trial(axis, trial_type, emg, mvc, window_length, ylimits, a
     load = axis.fill_between([resting_time, resting_time+loading_time], 0, 1, alpha=0.2, color='green', label='Load')
     unload = axis.fill_between([resting_time+loading_time, resting_time+loading_time+unloading_time], 0, 1, alpha=0.2, color='yellow', label='Unload')
 
-    axis.legend([rest, load, unload], ['Rest', 'Load', 'Unload'], frameon=True, ncol=3)
+    if not all:
+        axis.legend([rest, load, unload], ['Rest', 'Load', 'Unload'], frameon=True, ncol=3)
+    else:
+        axis.legend(trial_plots, trial_labels, frameon=True)
 
 
     # axis.fill_between(np.linspace(0, resting_time, num=rest_avg.size), rest_avg-rest_var, rest_avg+rest_var,alpha=0.5)
@@ -521,3 +530,83 @@ def plot_rms_average_trial(axis, trial_type, emg, mvc, window_length, ylimits, a
 
     axis.set_xlim([0, loading_time + unloading_time + resting_time])
     axis.set_ylim(ylimits)
+
+
+def calculate_trial_characteristics(type_data, emg_data, mvc, window_length, equilibrium_length):
+
+    loading_time = 9 # 6 
+
+    rest_emg = []
+    load_emg = []
+    unload_emg = []
+
+    for i in range(type_data['Time'].size):
+        filter_time = None
+        filter_data = None
+        if i == type_data['Time'].size - 1:
+            filter_time = emg_data['Time'][emg_data['Time'] >= type_data['Time'].iloc[i]]
+            filter_data = emg_data['data_0'][filter_time.index].to_numpy()/mvc
+        else:
+            filter_time = emg_data['Time'][emg_data['Time'] >= type_data['Time'].iloc[i]]
+            filter_time = filter_time[emg_data['Time'] < type_data['Time'].iloc[i+1]]
+            filter_data = emg_data['data_0'][filter_time.index].to_numpy()/mvc
+
+        if type_data['type'].iloc[i] == 'rest':
+            rest_emg.append(filter_data)
+        elif type_data['type'].iloc[i] == 'load':
+            load_emg.append(filter_data)
+        elif type_data['type'].iloc[i] == 'unload':
+            unload_emg.append(filter_data)
+
+    shortest_load = load_emg[0].size
+    for i in range(1, len(load_emg)):
+        current_load = load_emg[i].size
+        if current_load < shortest_load:
+            shortest_load = current_load
+
+    shortest_rest = rest_emg[0].size
+    for i in range(1, len(rest_emg)):
+        current_rest = rest_emg[i].size
+        if current_rest < shortest_rest:
+            shortest_rest = current_rest
+    
+    shortest_unload = unload_emg[0].size
+    for i in range(1, len(unload_emg)):
+        current_unload = unload_emg[i].size
+        if current_unload < shortest_unload:
+            shortest_unload = current_unload
+
+    for i in range(len(load_emg)):
+        load_emg[i] = load_emg[i][:shortest_load]
+
+    for i in range(len(unload_emg)):
+        unload_emg[i] = unload_emg[i][:shortest_unload]
+
+    for i in range(len(rest_emg)):
+        rest_emg[i] = rest_emg[i][:shortest_rest]
+
+    rest_stack = np.stack(rest_emg)
+    load_stack = np.stack(load_emg)
+    unload_stack = np.stack(unload_emg)
+
+    emg_stack = np.hstack((rest_stack, load_stack, unload_stack))
+
+    emg_list = []
+
+    for i in range(emg_stack.shape[0]):
+        emg_list.append(compute_RMS(emg_stack[i], window_length))
+
+    rms_stack = np.stack(emg_list)
+
+    load_rms_stack = rms_stack[:, rest_stack.shape[1]:rest_stack.shape[1]+load_stack.shape[1]-1]
+
+    period = loading_time/load_rms_stack.shape[1]
+
+    peak_values = np.max(load_rms_stack, axis=1)
+    peak_positions = np.argmax(load_rms_stack, axis=1) * period
+
+    equilibrium_values = np.mean(load_rms_stack[:, -int(equilibrium_length/period):], axis=1)
+
+
+    # return rest_stack, load_stack, unload_stack
+    return peak_values, peak_positions, equilibrium_values
