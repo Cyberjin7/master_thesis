@@ -217,9 +217,9 @@ def calculate_average(type_data, emg_data, mvc):
     load_avg = np.mean(load_emg)
     unload_avg = np.mean(unload_emg)
 
-    rest_var = np.var(rest_emg)
-    load_var = np.var(load_emg)
-    unload_var = np.var(unload_emg)
+    rest_var = np.std(rest_emg)
+    load_var = np.std(load_emg)
+    unload_var = np.std(unload_emg)
 
     return rest_avg, load_avg, unload_avg, rest_var, load_var, unload_var
 
@@ -255,9 +255,9 @@ def calculate_average_rms(type_data, emg_data, mvc, window_length):
     load_avg = np.mean(load_emg)
     unload_avg = np.mean(unload_emg)
 
-    rest_var = np.var(rest_emg)
-    load_var = np.var(load_emg)
-    unload_var = np.var(unload_emg)
+    rest_var = np.std(rest_emg)
+    load_var = np.std(load_emg)
+    unload_var = np.std(unload_emg)
 
     return rest_avg, load_avg, unload_avg, rest_var, load_var, unload_var
 
@@ -445,13 +445,13 @@ def plot_average_trial(axis, trial_type, emg, mvc, window_length, ylimits):
     rest_stack, load_stack, unload_stack = calculate_average_trial(trial_type, emg, mvc)
 
     rest_avg = np.mean(rest_stack, axis=0)
-    rest_var = np.var(rest_stack, axis=0)
+    rest_var = np.std(rest_stack, axis=0)
 
     load_avg = np.mean(load_stack, axis=0)
-    load_var = np.var(load_stack, axis=0)
+    load_var = np.std(load_stack, axis=0)
 
     unload_avg = np.mean(unload_stack, axis=0)
-    unload_var = np.var(unload_stack, axis=0)
+    unload_var = np.std(unload_stack, axis=0)
 
     loading_time = 9 # 6 
     unloading_time = 3
