@@ -474,7 +474,7 @@ def plot_average_trial(axis, trial_type, emg, mvc, window_length, ylimits):
     axis.set_xlim([0, loading_time + unloading_time + resting_time])
     axis.set_ylim(ylimits)
 
-def plot_rms_average_trial(axis, trial_type, emg, mvc, window_length, ylimits):
+def plot_rms_average_trial(axis, trial_type, emg, mvc, window_length, ylimits, all):
     loading_time = 9 # 6 
     unloading_time = 3
     resting_time = 3 # 5
@@ -484,11 +484,16 @@ def plot_rms_average_trial(axis, trial_type, emg, mvc, window_length, ylimits):
     rms_stack = calculate_rms_average_trial(trial_type, emg, mvc, window_length)
 
     rms_avg = np.mean(rms_stack, axis=0)
-    rms_var = np.var(rms_stack, axis=0)
+    rms_var = np.std(rms_stack, axis=0)
 
     time = np.linspace(0, loading_time + unloading_time + resting_time, rms_avg.size)
-    axis.plot(time, rms_avg, linewidth=0.75)
-    axis.fill_between(time, rms_avg-rms_var, rms_avg+rms_var, alpha=0.5)
+    if not all:
+        axis.plot(time, rms_avg, linewidth=0.75)
+        # axis.fill_between(time, rms_avg-rms_var, rms_avg+rms_var, alpha=0.4)
+        axis.fill_between(time, np.max(rms_stack, axis=0), np.min(rms_stack, axis=0), alpha=0.3)
+    else:
+        for i in range(rms_stack.shape[0]):
+            axis.plot(time, rms_stack[i], linewidth=0.75)
 
     # rest_avg = np.mean(rest_stack, axis=0)
     # rest_var = np.var(rest_stack, axis=0)
@@ -503,15 +508,16 @@ def plot_rms_average_trial(axis, trial_type, emg, mvc, window_length, ylimits):
     # time = np.linspace(0, loading_time + unloading_time + resting_time, emg_sequence.size)
     # axis.plot(time, emg_sequence, linewidth=0.75)
 
-    axis.fill_between([0, resting_time], 0, 1, alpha=0.2, color='blue', label='Rest')
-    axis.fill_between([resting_time, resting_time+loading_time], 0, 1, alpha=0.2, color='green', label='Load')
-    axis.fill_between([resting_time+loading_time, resting_time+loading_time+unloading_time], 0, 1, alpha=0.2, color='yellow', label='Unload')
+    rest = axis.fill_between([0, resting_time], 0, 1, alpha=0.2, color='blue', label='Rest')
+    load = axis.fill_between([resting_time, resting_time+loading_time], 0, 1, alpha=0.2, color='green', label='Load')
+    unload = axis.fill_between([resting_time+loading_time, resting_time+loading_time+unloading_time], 0, 1, alpha=0.2, color='yellow', label='Unload')
 
+    axis.legend([rest, load, unload], ['Rest', 'Load', 'Unload'], frameon=True, ncol=3)
 
 
     # axis.fill_between(np.linspace(0, resting_time, num=rest_avg.size), rest_avg-rest_var, rest_avg+rest_var,alpha=0.5)
     # axis.fill_between(np.linspace(resting_time, resting_time+loading_time, num=load_avg.size), load_avg-load_var, load_avg+load_var,alpha=0.5)
     # axis.fill_between(np.linspace(resting_time+loading_time, resting_time+loading_time+unloading_time, num=unload_avg.size), unload_avg-unload_var, unload_avg+unload_var,alpha=0.5)
 
-    # axis.set_xlim([0, loading_time + unloading_time + resting_time])
+    axis.set_xlim([0, loading_time + unloading_time + resting_time])
     axis.set_ylim(ylimits)
