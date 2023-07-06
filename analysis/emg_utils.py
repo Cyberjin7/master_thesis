@@ -532,7 +532,7 @@ def plot_rms_average_trial(axis, trial_type, emg, mvc, window_length, ylimits, a
     axis.set_ylim(ylimits)
 
 
-def calculate_trial_characteristics(type_data, emg_data, mvc, window_length, equilibrium_length):
+def calculate_trial_characteristics(type_data, emg_data, mvc, window_length, equilibrium_length, peak_window):
 
     loading_time = 9 # 6 
 
@@ -602,8 +602,8 @@ def calculate_trial_characteristics(type_data, emg_data, mvc, window_length, equ
 
     period = loading_time/load_rms_stack.shape[1]
 
-    peak_values = np.max(load_rms_stack, axis=1)
-    peak_positions = np.argmax(load_rms_stack, axis=1) * period
+    peak_values = np.max(load_rms_stack[:,:int(peak_window/period)], axis=1)
+    peak_positions = np.argmax(load_rms_stack[:,:int(peak_window/period)], axis=1) * period
 
     equilibrium_values = np.mean(load_rms_stack[:, -int(equilibrium_length/period):], axis=1)
 
