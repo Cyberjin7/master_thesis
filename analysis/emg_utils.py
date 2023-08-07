@@ -58,7 +58,7 @@ def plot_overview(trial_type, emg, state, mass, window, mvc, limits):
     ax[0].set_ylim(limits[0])
     ax[0].set_xlim([trial_type['Time'].iloc[0] - emg['Time'].iloc[0], emg['Time'].iloc[-window-1] - emg['Time'].iloc[0]])
     # ax[0].set_title('EMG Predictive Exo Support')
-    ax[0].set_ylabel('Normalized EMG')
+    ax[0].set_ylabel('Normalized EMG (mV)')
     # ax[0].set_yticks([0.1, 0.2, 0.3])
     # ax[0].set_xlabel('Time (s)')
     ax[0].grid(True)
@@ -97,7 +97,7 @@ def single_EMG(ax, trial_type, emg, window, plot_prediction, mass, min, max, mvc
 
     ax.set_ylim([min, max])
     ax.set_xlim([trial_type['Time'].iloc[0] - emg['Time'].iloc[0], emg['Time'].iloc[-1] - emg['Time'].iloc[0]])
-    ax.set_ylabel('Normalized EMG RMS')
+    ax.set_ylabel('Normalized EMG RMS (mV)')
     ax.set_xlabel('Time (s)')
     # ax.set_yticks([0, 0.05, 0.1, 0.15, 0.20, 0.25, 0.30])
     ax.grid(True, axis='y')
