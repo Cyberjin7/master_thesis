@@ -100,9 +100,9 @@ void ObjectEyer::sendMass(std::vector<double> gaze_pos)
     //     }
     // }
     
-    double x_center; // = (this->boxes[0].xmax + this->boxes[0].xmin)/2.0;
-    double y_center; // = (this->boxes[0].ymax + this->boxes[0].ymin)/2.0;
-    double prev_distance = this->vision_threshold; // = pow(x_center - gaze_pos[0],2) + pow(y_center - gaze_pos[1],2);
+    double x_center;
+    double y_center; 
+    double prev_distance = this->vision_threshold; 
     double current_distance = prev_distance;
     // this->target_box = this->boxes[0];
     for(int i = 0; i < this->boxes.size(); ++i){
@@ -116,13 +116,6 @@ void ObjectEyer::sendMass(std::vector<double> gaze_pos)
     }
 
     // ROS_INFO_STREAM("Target object is: " << this->target_box.Class.data());
-
-    // for (auto box: this->boxes){
-    //     x_center = (box.xmax+box.xmin)/2.0;
-    //     y_center = (box.ymax+box.ymin/2.0);
-    //     distance = pow(x_center - gaze_pos[0],2) + pow(y_center - gaze_pos[1],2);
-    // }
-
 
     std_msgs::Float64 msg;
     msg.data = this->object_mass_list[this->target_box.Class.data()];
@@ -153,12 +146,19 @@ void ObjectEyer::fixationCallback(const pupil_msgs::fixation::ConstPtr& fixation
 
 void ObjectEyer::objectCallback(const darknet_ros_msgs::BoundingBoxes::ConstPtr& boxes)
 {
+    // Initialization: Once a bounding box has been received for the first time, set object to true
+    // Only if object, gaze and hand are true, then hold detection is assessed
     if(!this->object){this->object = true;}
 
+    // Clears previous list of detected objects
     if (!this->boxes.empty()){
         this->boxes.clear();
     }
 
+    // Iterate through all identified objects
+    // If the objects are not person, keyboard and tvmonitor, then add to list of detected object
+    // These objects were excluded as they are often in the view environment but we would never hold these hence only getting in the way of 
+    // detection of other objects
     for (auto box : boxes->bounding_boxes)
     {
         // ROS_INFO("Object: %s", box.Class.data());
@@ -173,9 +173,14 @@ void ObjectEyer::objectCallback(const darknet_ros_msgs::BoundingBoxes::ConstPtr&
 
 }
 
+/**
+ * Updates the bounding box coordinates of the object that is being held
+*/
 void ObjectEyer::update_hold()
 {
+    // Iterate through all received bounding boxes
     for (auto box: this->boxes){
+        // If the class of the current bounding box is the same as the class of the held object and it is being held: then update coordinates
         if(box.Class.compare(this->holding_box.Class) == 0 && this->hold){
             this->holding_box.xmax = box.xmax;
             this->holding_box.xmin = box.xmin;
@@ -195,43 +200,10 @@ void ObjectEyer::handCallback(const pupil_msgs::hand_pos::ConstPtr& hand_pos)
 {
     if(!this->hand){this->hand = true;}
 
-    // have toggle variable for if bounding box is touching hand or not via threshold
-    // if toggle is off and bounding box and hand position fall below threshold, toggle to on and publish mass of object
-    // if toggle is on and bounding box and position go over threshold, toggle to off and publish mass of 0
-    // double pos_x = hand_pos->x*1200;
-    // double pos_y = hand_pos->y*720;
-    // this->hand_pos[0] = pos_x;
-    // this->hand_pos[1] = pos_y;
-
     this->wrist_pos[0] = hand_pos->wrist_pos.x*1200;
     this->wrist_pos[1] = hand_pos->wrist_pos.y*720;
     this->mft_pos[0] = hand_pos->mft_pos.x*1200;
     this->mft_pos[1] = hand_pos->mft_pos.y*720;
-    // ROS_INFO_STREAM("Object: " << this->target_box.ymax);
-    // ROS_INFO_STREAM("Hand: " << pos_y);
-    // ROS_INFO_STREAM("Distance: " << pos_y - this->target_box.ymax);
-    // if(!this->hold){
-    //     if((pos_x >= this->target_box.xmin) && (pos_x <= this->target_box.xmax) && (pos_y >= this->target_box.ymax)){
-    //         if(pos_y - this->target_box.ymax < this->vision_threshold){
-    //             ROS_INFO_STREAM("Holding object");
-    //             this->hold = true;
-    //             this->holding_box = this->target_box;
-    //             this->mass_request(this->target_box.Class.data());
-    //         }
-    //     }
-    // }
-    // else{
-    //     // if((pos_y >= this->target_box.ymax)&&(pos_y - this->target_box.ymax > this->vision_threshold)){
-    //     //     ROS_INFO_STREAM("Not holding object");
-    //     //     this->hold = false;
-    //     //     this->mass_request(0.0);
-    //     // }
-    //     if(((pos_y >= this->holding_box.ymax)&&(pos_y - this->holding_box.ymax > this->vision_threshold)) || (pos_x > this->holding_box.xmax) || (pos_x < this->holding_box.xmin)){
-    //         ROS_INFO_STREAM("Not holding object");
-    //         this->hold = false;
-    //         this->mass_request(0.0);
-    //     }
-    // }
 }
 
 void ObjectEyer::handAllCallback(const pupil_msgs::hand::ConstPtr& hand_all)
@@ -246,11 +218,26 @@ void ObjectEyer::handAllCallback(const pupil_msgs::hand::ConstPtr& hand_all)
     }
 }
 
+// TODO: both within_x and within_y not necessary. They both do the same thing. 
+/**
+ * Assess whether 'value' falls within 'xmin' and 'xmax' boundary values
+ * @param xmin minimum value
+ * @param xmax maximum value
+ * @param value value to assess
+ * @return true if value is between xmin and xmax
+*/
 bool ObjectEyer::within_x(double xmin, double xmax, double value)
 {
     return ((value >= xmin)&&(value <= xmax));
 }
 
+/**
+ * Assess whether 'value' falls within 'xmin' and 'xmax' boundary values
+ * @param ymin minimum value
+ * @param ymax maximum value
+ * @param value value to assess
+ * @return true if value is between ymin and ymax
+*/
 bool ObjectEyer::within_y(double ymin, double ymax, double value)
 {
     return ((value >= ymin)&&(value <= ymax));
@@ -260,14 +247,6 @@ bool ObjectEyer::within_y(double ymin, double ymax, double value)
 void ObjectEyer::assess_hold()
 {
     if(!this->hold){
-        // if((this->hand_pos[0] >= this->target_box.xmin) && (this->hand_pos[0] <= this->target_box.xmax) && (this->hand_pos[1] >= this->target_box.ymax)){
-        //     if(this->hand_pos[1] - this->target_box.ymax < this->vision_threshold){
-        //         ROS_INFO_STREAM("Holding object");
-        //         this->hold = true;
-        //         this->holding_box = this->target_box;
-        //         this->mass_request(this->target_box.Class.data());
-        //     }
-        // }
         if(within_x(this->target_box.xmin, this->target_box.xmax, this->landmarks[9].x) && within_y(this->landmarks[12].y, this->landmarks[0].y, this->target_box.ymax)){
             ROS_INFO_STREAM("Holding " << this->target_box.Class.data());
             this->hold = true;
@@ -278,22 +257,10 @@ void ObjectEyer::assess_hold()
 
     }
     else{
-        // if(((this->hand_pos[1] >= this->holding_box.ymax)&&(this->hand_pos[1] - this->holding_box.ymax > this->vision_threshold)) || (this->hand_pos[0] > this->holding_box.xmax) || (this->hand_pos[0] < this->holding_box.xmin)){
-        //     ROS_INFO_STREAM("Not holding object");
-        //     this->hold = false;
-        //     this->mass_request(0.0);
-        // }
-        // if((!within_x(this->holding_box.xmin, this->holding_box.xmax, this->wrist_pos[0]))||(!within_y(this->mft_pos[1], this->wrist_pos[1],  this->holding_box.ymax))){
         if(!within_y(this->landmarks[12].y, this->landmarks[0].y, this->holding_box.ymax)){
             ROS_INFO_STREAM("Not holding");
             this->hold = false;
             this->mass_request(0.0);
-            // this->holding_box.xmax = 0.0;
-            // this->holding_box.xmin = 0.0;
-            // this->holding_box.ymax = 0.0;
-            // this->holding_box.ymin = 0.0;
-            // this->holding_box.Class.clear();
-            // this->holding_box.Class.assign("none");
 
             this->target_box.xmax = 0.0;
             this->target_box.xmin = 0.0;
@@ -306,6 +273,11 @@ void ObjectEyer::assess_hold()
     }
 }
 
+/**
+ * Fail safe to prevent undefined behavior. Returns true if hand, gaze and bounding box data has been received at least once for each subscriber
+ * Undefined behavior in the beginning when hand and bounding box data is not necessarily available yet
+ * @return true if hand, gaze, object are true, else false. 
+*/
 bool ObjectEyer::initialized()
 {
     return (this->hand && this->gaze && this->object);
@@ -324,12 +296,6 @@ void ObjectEyer::mass_request(std::string target_object)
         this->mass_change.mass = this->object_mass_list[target_object];
         this->mass_change_pub.publish(this->mass_change);
     }
-    // this->change_mass_request.request.mass.data = this->object_mass_list[target_object];
-    // this->mass_client.call(this->change_mass_request);
-    // this->mass_change.header.stamp = ros::Time::now();
-    // this->mass_change.object = target_object;
-    // this->mass_change.mass = this->object_mass_list[target_object];
-    // this->mass_change_pub.publish(this->mass_change);
 }
 
 void ObjectEyer::mass_request(double target_mass)
@@ -342,6 +308,10 @@ void ObjectEyer::mass_request(double target_mass)
     this->mass_change_pub.publish(this->mass_change);
 }
 
+/**
+ * Sets distance threshold value. Distance between centroid of bounding box and gaze must be below this threshold to be detected as gaze target
+ * @param threshold_value Distance threshold
+*/
 void ObjectEyer::set_threshold(double threshold_value)
 {
     this->vision_threshold = threshold_value;
@@ -353,11 +323,14 @@ int main(int argc, char **argv)
 
     ros::NodeHandle n;
 
+    // Loads list of objects with their corresponding mass
     std::map<std::string, double> object_list;
     ros::param::get("~objects", object_list);
 
+    // Create class instance
     ObjectEyer eyer(n, object_list);
 
+    // Load variables from launch file
     bool fixation;
     ros::param::get("~fixation", fixation);
     bool emg;
@@ -365,10 +338,12 @@ int main(int argc, char **argv)
     bool vision;
     ros::param::get("~vision", vision);
 
+    // Load minimum distance for object gaze detection
     double threshold;
     ros::param::get("~vision_threshold", threshold);
     eyer.set_threshold(threshold);
 
+    // Subscribe to either fixation or gaze data based on variable in launch file
     ros::Subscriber eye_sub;
     if(fixation){
         eye_sub = n.subscribe("pupil_fixation", 1, &ObjectEyer::fixationCallback, &eyer);
@@ -377,8 +352,15 @@ int main(int argc, char **argv)
         eye_sub = n.subscribe("pupil_gaze", 60, &ObjectEyer::gazeCallback, &eyer);
     }
 
+    // Subscribe to bounding boxes
     ros::Subscriber object_sub = n.subscribe("darknet_ros/bounding_boxes", 1, &ObjectEyer::objectCallback, &eyer);
 
+
+    /*
+    Choose between EMG or mediapipe to predict object grasping
+    */
+
+    // Fail safe to prevent both from being used at the same time
     if(emg && vision){
         ROS_WARN_STREAM("Cannot use EMG and mediapipe hand tracking together. Please choose one");
         ros::shutdown();
@@ -386,12 +368,10 @@ int main(int argc, char **argv)
 
     ros::Subscriber emg_activity;
     ros::Subscriber hand_tracker;
-
     if(emg){
         emg_activity = n.subscribe("emg_activity_thresh", 1, &ObjectEyer::emgCallback, &eyer);
     }
     if(vision){
-        // hand_tracker = n.subscribe("hand_position", 60, &ObjectEyer::handCallback, &eyer);
         hand_tracker = n.subscribe("hand", 60, &ObjectEyer::handAllCallback, &eyer);
     }
 
@@ -399,6 +379,9 @@ int main(int argc, char **argv)
     ros::Rate r(60);
 
     while(ros::ok()){
+        // If gaze data, hand data and object data has been received and vision is being used for hold detection:
+        // Update coordinates of held object if applicable
+        // Assess whether the object is still being held or if a new object is being held while not holding an object
         if(eyer.initialized() && vision){
             eyer.update_hold();
             eyer.assess_hold();

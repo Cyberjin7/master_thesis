@@ -133,6 +133,7 @@ class Darknet_Visualizer(Plugin):
         draw_polyline_norm(verts, thickness=5, color=rgba) # Draws the box based on verts
         self.glfont.set_color_float((1.0,1.0,1.0,1.0))
         try:
+            # If hold is detected, print strength of grasp, else mass of object in bounding box
             if self.hold and (self.hold_object.Class == box.Class):
                 self.glfont.draw_text(box.xmin, box.ymin, box.Class + ": " + self.grasp_strength.get(box.Class) + " Grasp")
             else:
