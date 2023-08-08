@@ -59,7 +59,16 @@ class Darknet_Visualizer(Plugin):
                         "cup": 0.1,
                         "wine glass": 0.1,
                         "mouse": 0.1,
-                        "book": 0.2}
+                        "book": 0.2,
+                        "keyboard": 0.1}
+        
+        self.grasp_strength = {"bottle": "Strong",
+                               "cup": "Weak",
+                               "wine glass": "Weak",
+                               "mouse": "Weak",
+                               "book": "Medium",
+                               "keyboard": "Medium",
+                               "cell phone": "Medium"}
         
         self.landmarks = ()
 
@@ -104,7 +113,11 @@ class Darknet_Visualizer(Plugin):
         draw_polyline_norm(verts, thickness=5, color=rgba)   
         self.glfont.set_color_float((1.0,1.0,1.0,1.0))
         try:
-            self.glfont.draw_text(box.xmin, box.ymin, box.Class + ": " + "{:.2f}".format(self.objects.get(box.Class)) + "kg")
+            if self.hold and (self.hold_object.Class == box.Class):
+                self.glfont.draw_text(box.xmin, box.ymin, box.Class + ": " + self.grasp_strength.get(box.Class) + " Grasp")
+            else:
+                self.glfont.draw_text(box.xmin, box.ymin, box.Class + ": " + "{:.2f}".format(self.objects.get(box.Class)) + "kg")
+            # self.glfont.draw_text(box.xmin, box.ymin, box.Class + ": " + self.grasp_strength.get(box.Class) + " Grasp")
         except TypeError:
             self.glfont.draw_text(box.xmin, box.ymin, box.Class)
         # self.glfont.draw_text(box.xmin, box.ymin, box.Class + ": " +"{:.1f}".format(box.probability*100))
